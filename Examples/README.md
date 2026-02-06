@@ -28,7 +28,7 @@ Each subdirectory has its own README with detailed setup instructions.
 
 ## Documentation
 
-Browse the full SDK documentation at [public-docs/](public-docs/) or visit the [hosted docs site](https://bithuman.github.io/public-bithuman-examples/).
+Browse the full SDK documentation at [public-docs/](public-docs/) or visit the [hosted docs site](https://docs.bithuman.ai).
 
 ## Resources
 
