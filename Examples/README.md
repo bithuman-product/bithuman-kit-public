@@ -7,6 +7,7 @@ Public examples, documentation, and integrations for the [BitHuman](https://bith
 | Directory | Description |
 |-----------|-------------|
 | [public-docs/](public-docs/) | SDK documentation, API guides, and code examples |
+| [public-sdk-examples/](public-sdk-examples/) | Python SDK examples (basic usage, LiveKit, FastRTC) |
 | [public-docker-example/](public-docker-example/) | Docker Compose setup for BitHuman + LiveKit |
 | [public-livekit-ui-example/](public-livekit-ui-example/) | Example Agent UI for LiveKit |
 | [public-macos-offline-example/](public-macos-offline-example/) | Offline macOS setup with Ollama + Apple Speech |
@@ -19,6 +20,7 @@ git clone https://github.com/bithuman-prod/public-bithuman-examples.git
 cd public-bithuman-examples
 
 # Pick an example
+cd public-sdk-examples  # Python SDK examples
 cd public-docker-example  # Docker setup
 cd public-livekit-ui-example  # LiveKit UI
 cd public-macos-offline-example  # Offline macOS
