@@ -15,7 +15,7 @@ Public examples, documentation, and integrations for the [BitHuman](https://bith
 
 ```bash
 # Clone this repo
-git clone https://github.com/bithuman/public-bithuman-examples.git
+git clone https://github.com/bithuman-prod/public-bithuman-examples.git
 cd public-bithuman-examples
 
 # Pick an example
