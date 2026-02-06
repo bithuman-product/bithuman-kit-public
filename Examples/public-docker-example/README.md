@@ -1,0 +1,102 @@
+# bitHuman Visual Agent App powered by LiveKit
+
+A local deployment of bitHuman's AI visual agent with real-time conversation capabilities.
+
+## What You Need
+
+- Docker and Docker Compose (**For MacOS we strongly recommend [OrbStack](https://orbstack.dev/) for better performance and easier management**)
+- API keys: `BITHUMAN_API_SECRET` and `OPENAI_API_KEY`
+- `.imx` model files (place in `./models/` directory)
+
+## Quick Setup
+
+### 1. Configure Environment
+
+**Get your bitHuman API Secret:**
+
+![Get API Key Example](./assets/example-get-api-key.jpg)
+
+Create a `.env` file:
+
+```bash
+BITHUMAN_API_SECRET=your_api_secret_here
+OPENAI_API_KEY=your_openai_key_here
+```
+
+### 2. Add Models
+
+Place your `.imx` files in the `models/` directory:
+
+```bash
+# Example - models/ directory should contain:
+models/
+└── YourModel.imx
+```
+
+**Download .imx models from bitHuman:**
+
+![Model Download Example](./assets/example-download.jpg)
+
+### 3. Start Services
+
+```bash
+docker compose up
+```
+
+Wait for all services to start (first run takes a few minutes).
+
+**Docker Services Running:**
+
+![Docker Services Example](./assets/example-docker.jpg)
+
+### 4. Access the App
+
+Open http://localhost:4202 in your browser.
+
+**App Interface:**
+
+![App Screenshot](./assets/example-screenshot.jpg)
+
+## That's It!
+
+The system runs 4 services:
+- **LiveKit**: WebRTC communication server
+- **Agent**: AI conversation handler  
+- **Frontend**: Web interface
+- **Redis**: Message broker
+
+## Development
+
+**Edit agent code:**
+```bash
+vim agent.py
+docker compose restart agent
+```
+
+**View logs:**
+```bash
+docker compose logs -f agent
+```
+
+**Stop everything:**
+```bash
+docker compose down
+```
+
+## Troubleshooting
+
+**Services won't start?**
+- Check `.env` file exists with valid API keys
+- Ensure models/ directory contains `.imx` files
+- Run `docker compose logs [service]` to see errors
+
+**Port conflicts?**
+- Frontend uses port 4202
+- LiveKit uses ports 17880-17881 and UDP 50700-50720
+
+**Clean restart:**
+```bash
+docker compose down -v
+docker compose up --build
+```
+

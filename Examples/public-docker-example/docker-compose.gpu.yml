@@ -1,0 +1,140 @@
+services:
+  # LiveKit server - Real-time communication server for WebRTC
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    restart: always
+    ports:
+      - "17880:17880"     # WebSocket/HTTP API
+      - "17881:17881"     # TCP for signaling
+      - "50700-50720:50700-50720/udp" # UDP for media (WebRTC)
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml  # Mount LiveKit configuration
+    networks:
+      - livekit-gpu-network
+    depends_on:
+      redis:
+        condition: service_started
+
+  # GPU Avatar Worker - Self-hosted GPU rendering service
+  # This service runs the gpu-avatar-worker container for local GPU rendering
+  gpu-avatar-worker:
+    image: docker.io/bithumanhubs/gpu-avatar-worker:latest
+    restart: always
+    # GPU support using Docker Compose v2 syntax
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - BITHUMAN_API_SECRET=${BITHUMAN_API_SECRET}
+      # Directory for avatar model files (float.pth, wav2vec models, etc.)
+      - AVATAR_MODEL_DIR=/app/avatar-model
+      # Directory for preset avatar images (zero-latency switching)
+      - PRESET_AVATARS_DIR=/app/preset-avatars
+      - CUDA_VISIBLE_DEVICES=0  # Use first GPU
+    volumes:
+      # Mount avatar model directory (contains float.pth, wav2vec models, etc.)
+      # Models will be downloaded here on first run if not present
+      - ./avatar-model:/app/avatar-model
+      # Mount preset avatars directory for zero-latency avatar switching
+      # Place your preset avatar images in ./preset-avatars on host
+      - ./preset-avatars:/app/preset-avatars
+      # Cache directory for downloads
+      - gpu-worker-cache:/app/.cache
+    networks:
+      - livekit-gpu-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8089/health')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 90s  # Longer start period for GPU initialization
+
+  # AI Agent (GPU) - Backend service with custom GPU endpoint support
+  agent-gpu:
+    build:
+      context: .  # Build from current directory
+      dockerfile: agent.gpu.dockerfile
+    entrypoint: ["python", "agent_gpu.py", "start"]
+    restart: always
+    environment:
+      # LiveKit connection settings
+      - LIVEKIT_URL=ws://livekit:17880  # Internal Docker network URL
+      - LIVEKIT_API_KEY=devkey  # Default dev key (change in production)
+      - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
+      # Custom GPU endpoint settings
+      - CUSTOM_GPU_URL=http://gpu-avatar-worker:8089/launch  # Internal Docker network URL
+      - CUSTOM_GPU_TOKEN=${CUSTOM_GPU_TOKEN:-}  # Optional token for GPU worker auth
+      # Avatar settings
+      - AVATAR_ID=${AVATAR_ID:-}  # Optional: Pre-configured avatar ID on worker
+      # Avatar image path - maps to the ./avatars directory in the container
+      - BITHUMAN_AVATAR_IMAGE=/app/avatars/custom-avatar.jpg
+      - OPENAI_VOICE=${OPENAI_VOICE:-alloy}  # Voice for OpenAI realtime
+      - AVATAR_PERSONALITY=${AVATAR_PERSONALITY:-}  # Optional: Custom personality prompt
+    env_file:
+      - ./.env.gpu  # API keys (BITHUMAN_API_SECRET, OPENAI_API_KEY, CUSTOM_GPU_TOKEN)
+    volumes:
+      # Mount avatars directory for custom avatar images
+      # Place your avatar images in ./avatars on host
+      - ./avatars:/app/avatars
+    networks:
+      - livekit-gpu-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Access host services
+    depends_on:
+      livekit:
+        condition: service_started
+      # Note: gpu-avatar-worker is not required for agent to connect to LiveKit
+      # Agent will connect immediately, and GPU worker will be called when needed
+      # gpu-avatar-worker:
+      #   condition: service_healthy
+
+  # Frontend - Web interface (LiveKit agents playground)
+  frontend:
+    build:
+      context: .
+      dockerfile: webui.dockerfile
+      args:
+        # Build-time: NEXT_PUBLIC_LIVEKIT_URL is embedded in client code
+        # For remote deployment, set this to the public IP/domain, e.g.:
+        # LIVEKIT_URL: ws://34.22.109.207:17880
+        # For local deployment, use:
+        LIVEKIT_URL: ws://localhost:17880  # Public URL for browser access
+    restart: always
+    ports:
+      - "4202:4202"
+    environment:
+      # Runtime environment variables (for server-side API routes)
+      - LIVEKIT_API_KEY=devkey  # API key for LiveKit connection
+      - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
+      - PORT=4202  # Override Next.js default port
+      # Note: NEXT_PUBLIC_* variables are embedded at build time
+      # If you need to change the URL after build, you must rebuild the image
+      # with the correct LIVEKIT_URL build arg
+    networks:
+      - livekit-gpu-network
+    depends_on:
+      livekit:
+        condition: service_started
+
+  # Redis - Message broker for LiveKit clustering and state management
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - livekit-gpu-network
+    # No external ports - only used internally by LiveKit
+
+# Docker network for service communication
+networks:
+  livekit-gpu-network:
+    driver: bridge  # Default Docker bridge network
+
+# Docker volumes for persistent data
+volumes:
+  gpu-worker-cache:
+    driver: local  # Cache for GPU worker models and downloads
