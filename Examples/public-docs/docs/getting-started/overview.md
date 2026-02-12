@@ -1,84 +1,89 @@
-# Getting Started
+# Quick Start
 
-Welcome to bitHuman SDK. Create lifelike digital avatars that respond to audio in real-time.
+Get a bitHuman avatar running in 5 minutes.
 
 ---
 
-## What is bitHuman?
+## 1. Get Credentials
 
-bitHuman SDK lets you build **interactive avatars** that:
-- Animate realistically from audio input
-- Show dynamic movement with speech
-- Work in real-time (25 FPS)
-- Integrate easily into any app
+1. Sign up at [imaginex.bithuman.ai](https://imaginex.bithuman.ai)
+2. Copy your **API Secret** from the Developer page
 
-## Quick Setup
+   ![API Secret](assets/images/example-api-secret.jpg)
 
-For complete setup instructions, see our **[README.md](https://github.com/bithuman-product/examples/blob/main/public-docs/README.md)** which covers:
+3. Download an avatar model (`.imx` file) from [Community Models](https://imaginex.bithuman.ai/#community)
 
-### Installation
+   ![Download Model](assets/images/example-download-button.jpg)
+
+## 2. Install
+
 ```bash
-# 1. Create conda environment
-conda create -n bithuman python=3.11
-conda activate bithuman
-
-# 2. Install SDK
 pip install bithuman --upgrade
 ```
 
-### API Setup
-1. Get your API secret at [imaginex.bithuman.ai](https://imaginex.bithuman.ai/#developer)
-2. Download an avatar model from the Community page
-3. Set environment variables:
-```bash
-BITHUMAN_API_SECRET=sk_bh_1234567890abcdef...
-BITHUMAN_MODEL_PATH=/path/to/model.imx
-```
+## 3. Run Your First Avatar
 
-### First Avatar (3 lines of code)
 ```python
+import asyncio
 from bithuman import AsyncBithuman
+from bithuman.audio import load_audio, float32_to_int16
 
-runtime = await AsyncBithuman.create(model_path="model.imx", api_secret="your_secret")
-async for frame in runtime.run():
-    display_frame(frame)  # Your display logic here
+async def main():
+    # Initialize
+    runtime = await AsyncBithuman.create(
+        model_path="avatar.imx",
+        api_secret="sk_bh_..."
+    )
+    await runtime.start()
+
+    # Load and push audio
+    audio, sr = load_audio("speech.wav")
+    await runtime.push_audio(
+        float32_to_int16(audio).tobytes(), sr
+    )
+    await runtime.flush()
+
+    # Display animated frames
+    async for frame in runtime.run():
+        if frame.has_image:
+            show(frame.bgr_image)  # numpy (H, W, 3)
+
+asyncio.run(main())
 ```
 
-## What You Can Build
+[Full working example →](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/01-quickstart)
 
-**Desktop Apps** (Standalone SDK):
-- Voice assistants
-- Interactive kiosks
-- Custom interfaces
+---
 
-**Web Apps** (LiveKit Integration):
-- Video chat avatars
-- Customer service bots
-- Virtual receptionists
+## Key Concepts
 
-## Ready to Build?
+| Concept | Description |
+|---------|-------------|
+| **Runtime** | `AsyncBithuman` instance that processes audio → video |
+| **push_audio** | Feed audio bytes — avatar lip-syncs in real-time |
+| **flush** | Signals end of audio input |
+| **run()** | Async generator that yields frames at 25 FPS |
+| **Frame** | Contains `.bgr_image` (numpy), `.audio_chunk`, `.end_of_speech` |
 
-Start with the **[Prompt Guide](getting-started/prompts.md)** to master the CO-STAR framework.
+---
 
-Then explore our guides:
+## Next Steps
 
-- **[Media Guide](getting-started/media-guide.md)** -- Upload voice, image, and video
-- **[Animal Mode](getting-started/animal-mode.md)** -- Create animal avatars
+Progress through the examples by complexity:
 
-Finally, try the **[Examples](examples/overview.md)**:
+1. **[Audio Clip](examples/avatar-with-audio-clip.md)** — Play audio file through avatar *(5 min)*
+2. **[Live Microphone](examples/avatar-with-microphone.md)** — Real-time mic input *(10 min)*
+3. **[AI Conversation](examples/livekit-openai-agent.md)** — OpenAI voice chat *(15 min)*
 
-1. **[Audio Clip Avatar](examples/avatar-with-audio-clip.md)** -- Start here (5 minutes)
-2. **[Live Microphone Avatar](examples/avatar-with-microphone.md)** -- Real-time interaction
-3. **[OpenAI Agent](examples/livekit-openai-agent.md)** -- Full AI conversation in browser
+Or jump straight to the **[Docker App](https://github.com/bithuman-product/examples/tree/main/public-docker-example)** for a complete end-to-end setup.
 
-## System Requirements
+### Guides
 
-**Minimum:**
-- Python 3.9+
-- 4+ CPU cores
-- 8GB RAM
+- **[Prompt Guide](getting-started/prompts.md)** — Master the CO-STAR framework for avatar personality
+- **[Media Guide](getting-started/media-guide.md)** — Upload voice, image, and video assets
+- **[Animal Mode](getting-started/animal-mode.md)** — Create animal avatars
 
-**Platforms:**
-- macOS (M2+ recommended, M4 ideal)
-- Linux (x64, ARM64)
-- Windows (via WSL)
+### System Requirements
+
+- Python 3.9+, 4+ CPU cores, 8GB RAM
+- macOS (M2+), Linux (x64/ARM64), or Windows (WSL)

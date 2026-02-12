@@ -207,7 +207,8 @@ api-secret: YOUR_API_SECRET
 }
 ```
 
-**Response:**
+If dynamics regeneration is triggered (e.g., when enabling with `toggle_enabled: true`):
+
 ```json
 {
   "success": true,

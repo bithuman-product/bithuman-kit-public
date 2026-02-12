@@ -256,12 +256,6 @@ Preset avatars are automatically pre-processed at container startup for instant 
 - Good lighting and neutral expression
 - File size under 10MB for optimal performance
 
-## Cloud Deployment Guides
-
-### Cloud Platforms
-
-> **Note:** Integration guides for other cloud platforms (AWS ECS, Google Cloud Run, Azure Container Instances, etc.) will be added in future updates. Please check back for additional deployment options.
-
 ## Troubleshooting
 
 ### Container won't start
@@ -305,7 +299,7 @@ Preset avatars are automatically pre-processed at container startup for instant 
 
 ## Next Steps
 
-- **Integration Guide**: See [Custom GPU Endpoint Integration](https://github.com/bithuman-product/examples/tree/main/public-docs/examples/cloud/expression#%EF%B8%8F-example-3-custom-gpu-endpoint)
+- **Integration Guide**: See [Docker Example](https://github.com/bithuman-product/examples/tree/main/public-docker-example) for a full GPU integration setup
 - **LiveKit Plugins**: Install required `livekit-plugins-bithuman` package
 - **Monitoring**: Set up monitoring dashboards and alerts for your deployment
 - **Scaling**: Configure auto-scaling policies based on traffic patterns

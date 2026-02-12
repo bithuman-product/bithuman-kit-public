@@ -127,21 +127,18 @@ When the AI cannot locate facial features automatically, you will be prompted to
 ![Help Needed](../assets/images/example-help-needed.jpg)
 *When automatic detection needs assistance*
 
-### Manual Marking Process:
+### Manual Marking Process
 
-When prompted, you'll mark these key facial points:
+Follow these steps when prompted:
+
+1. **Click "Mark Face"** when the "Help Needed" prompt appears
+2. **Draw a rectangle** around the entire facial area — eyes, nose, mouth, and chin
+3. **Submit** — the system will extract facial landmarks from your selection
 
 ![Mark Face Points](../assets/images/example-mark-face-points.jpg)
 *Draw a rectangle to encompass the entire facial area*
 
-**Required Area:**
-The marked rectangle should cover the required facial region including:
-- **Eyes** -- both left and right eyes
-- **Nose** -- nose area
-- **Mouth** -- complete mouth region
-- **Chin** -- lower face boundary
-
-Simply draw a rectangle that encompasses the entire face area. There is no need to individually select specific points.
+The rectangle should cover all key features: both eyes, nose, mouth, and chin. No need to select individual points — just one bounding rectangle.
 
 ---
 
@@ -153,16 +150,18 @@ Simply draw a rectangle that encompasses the entire face area. There is no need 
 - **Good contrast** -- features should stand out from background
 - **High resolution** -- more detail means better detection
 
-**Common Challenges:**
-- Fur covering facial features
-- Side profile poses
-- Complex lighting or shadows
-- Cartoonish or stylized features
+**Troubleshooting:**
+
+| Problem | Solution |
+|---------|----------|
+| Face not detected | Use a front-facing photo with clear eyes, nose, and mouth visible |
+| Poor lip-sync | Try a higher-resolution image with more contrast around the mouth |
+| Unnatural movement | Avoid side profiles — straight-on views work best |
 
 **Tips:**
-- Start with the pre-selected animals for guaranteed compatibility
+- Start with the pre-built animals above for guaranteed compatibility
 - Use well-lit, high-contrast images
-- Be patient with manual marking -- precision improves results
+- For custom pets, crop the image so the face fills most of the frame
 - Test with simple expressions first
 
 ---

@@ -1,126 +1,89 @@
 # bitHuman SDK
 
-> **Create lifelike digital avatars that respond to audio in real-time.**
-
-- **[bitHuman + OpenAI](https://github.com/bithuman-product/examples/tree/main/public-docker-example)** -- Complete Docker setup with web UI. Cloud-powered AI conversations via LiveKit + OpenAI + Web Interface.
-- **[bitHuman + Apple](https://github.com/bithuman-product/examples/tree/main/public-macos-offline-example)** -- 100% local, most cost effective. Private on-device AI via Apple Speech + Siri + Ollama LLM.
-
----
-
-## What is bitHuman SDK?
-
-bitHuman SDK lets you build **interactive avatars** for your applications:
-
-- **CPU-Only Operation** -- Runs entirely on host CPU, no GPU required.
-- **10x Lower Costs** -- Choose host device or CPU cloud for significant cost savings.
-- **Real-time Animation** -- 25 FPS video with dynamic movement.
-- **Audio-driven** -- Realistic facial movements from any audio input.
-- **Easy Integration** -- 3 lines of code to get started.
-- **Web Ready** -- Deploy to browsers with LiveKit integration.
+> Create lifelike digital avatars that respond to audio in real-time.
 
 ---
 
 ## Quick Start
 
-### Complete Docker Demo
+### Option 1: Docker (Recommended)
 
-Full end-to-end bitHuman + LiveKit app with web UI.
+Full app with web UI, voice conversation, and LiveKit integration.
 
-**What you get:** Visual agent with real-time conversation, web interface, and audio support.
-
-**[Full Example Repository](https://github.com/bithuman-product/examples/tree/main/public-docker-example)**
-
-#### 1. Get Your Credentials
-- **Free API Secret** -- [imaginex.bithuman.ai](https://imaginex.bithuman.ai)
-
-  ![Free API Secret](assets/images/example-api-secret.jpg)
-
-- **Download Avatar** -- [Community Models](https://imaginex.bithuman.ai/#community)
-
-  ![Download Avatar](assets/images/example-download-button.jpg)
-
-#### 2. Clone and Setup
 ```bash
-# Clone the complete demo
 git clone https://github.com/bithuman-product/examples.git
-cd public-docker-example
+cd examples/public-docker-example
 
-# Create environment file
-echo "BITHUMAN_API_SECRET=your_api_secret_here" > .env
-echo "OPENAI_API_KEY=your_openai_key_here" >> .env
+# Add your API keys to .env
+echo "BITHUMAN_API_SECRET=your_secret" > .env
+echo "OPENAI_API_KEY=your_openai_key" >> .env
 
-# Add your .imx model files to models/ directory
-mkdir -p models
-# Copy your downloaded .imx files here
-```
+# Add your .imx model to models/
+mkdir -p models && cp ~/Downloads/avatar.imx models/
 
-#### 3. Launch Complete App
-```bash
-# Start all services (LiveKit + Agent + Web UI + Redis)
 docker compose up
-
-# Open your browser to http://localhost:4202
+# Open http://localhost:4202
 ```
 
-You now have a complete bitHuman application with:
-- Real-time avatar animation
-- Voice conversation capabilities
-- Professional web interface
-- Full LiveKit integration
+[Full Docker Example →](https://github.com/bithuman-product/examples/tree/main/public-docker-example)
 
----
+### Option 2: Python SDK
 
-### Alternative: SDK Integration
+Integrate directly into your Python application.
 
-For custom applications, integrate bitHuman directly:
-
-#### Install and Setup
 ```bash
-# Install SDK
 pip install bithuman --upgrade
-
-# Set environment
-export BITHUMAN_API_SECRET="your_secret"
-export BITHUMAN_MODEL_PATH="/path/to/model.imx"
 ```
 
-#### Your First Avatar (3 lines)
 ```python
 from bithuman import AsyncBithuman
 
-runtime = await AsyncBithuman.create(model_path="model.imx", api_secret="secret")
+# Create runtime
+runtime = await AsyncBithuman.create(
+    model_path="avatar.imx",
+    api_secret="sk_bh_..."
+)
+await runtime.start()
+
+# Push audio and get animated frames
+await runtime.push_audio(audio_bytes, sample_rate=16000)
+await runtime.flush()
+
 async for frame in runtime.run():
-    display_frame(frame)
+    frame.bgr_image       # numpy array (H, W, 3)
+    frame.audio_chunk     # synchronized audio output
+    frame.end_of_speech   # True when utterance ends
 ```
 
----
-
-## What You Can Build
-
-### Desktop Apps
-- Voice assistants
-- Interactive kiosks
-- Custom interfaces
-
-### Web Applications
-- Video chat avatars
-- Customer service bots
-- Virtual receptionists
-
-### IoT and Edge
-- Smart home assistants
-- Retail demonstrations
-- Industrial interfaces
+[SDK Quickstart Example →](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/01-quickstart)
 
 ---
 
-## Documentation Structure
+## Core API
 
-### [Getting Started](getting-started/overview.md)
-Quick setup, prompts, media uploads, and animal mode.
+| Method | Description |
+|--------|-------------|
+| `AsyncBithuman.create(model_path, api_secret)` | Initialize the avatar runtime |
+| `runtime.start()` | Begin processing |
+| `runtime.push_audio(data, sample_rate)` | Send audio for lip-sync |
+| `runtime.flush()` | Signal end of audio input |
+| `runtime.run()` | Async generator yielding video + audio frames |
+| `runtime.get_frame_size()` | Returns `(width, height)` of output |
 
-### [Examples](examples/overview.md)
-5 examples from basic to advanced.
+---
+
+## Examples
+
+| Example | Description | Link |
+|---------|-------------|------|
+| **Audio Clip** | Play audio file through avatar | [01-quickstart](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/01-quickstart) |
+| **Live Microphone** | Real-time mic input to avatar | [02-microphone](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/02-microphone) |
+| **AI Conversation** | OpenAI voice chat with avatar | [03-ai-conversation](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/03-ai-conversation) |
+| **Streaming Server** | WebSocket server with LiveKit | [04-streaming-server](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/04-streaming-server) |
+| **Web UI** | Browser-based Gradio interface | [05-web-ui](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/05-web-ui) |
+| **Docker App** | Full stack: LiveKit + OpenAI + Web UI | [public-docker-example](https://github.com/bithuman-product/examples/tree/main/public-docker-example) |
+| **Apple Offline** | 100% local on macOS (Siri + Ollama) | [public-macos-offline-example](https://github.com/bithuman-product/examples/tree/main/public-macos-offline-example) |
+| **Java Client** | WebSocket streaming from Java | [public-java-example](https://github.com/bithuman-product/examples/tree/main/public-java-example) |
 
 ---
 
@@ -129,6 +92,6 @@ Quick setup, prompts, media uploads, and animal mode.
 | Platform | Status | Notes |
 |----------|--------|-------|
 | **Linux (x86_64)** | Full Support | Production ready |
-| **Linux (ARM64)** | Full Support | Suitable for edge deployments |
-| **macOS (Apple Silicon)** | Full Support | M2+ recommended, M4 ideal |
+| **Linux (ARM64)** | Full Support | Edge deployments |
+| **macOS (Apple Silicon)** | Full Support | M2+, M4 ideal |
 | **Windows** | Full Support | Via WSL |

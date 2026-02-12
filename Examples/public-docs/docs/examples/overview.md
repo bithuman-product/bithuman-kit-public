@@ -1,89 +1,46 @@
 # Examples
 
-> **5 simple examples to get you started**
-
-Choose based on what you want to build.
+Working examples from basic to advanced, each with full source code.
 
 ![Example Agent Variety](../assets/images/example-agent-images.jpg)
-*Create diverse agents for different use cases*
 
 ---
 
-## Pick Your Example
+## SDK Examples
 
-### Desktop Apps
+Progressive examples — each builds on the previous one.
 
-**[Audio Clip Avatar](examples/avatar-with-audio-clip.md)** -- Start here
-- Play audio files with avatar animation
-- **Good for**: Demos, presentations
-- **Time**: 5 minutes
+| # | Example | What It Does | Source |
+|---|---------|-------------|--------|
+| 1 | **[Audio Clip](examples/avatar-with-audio-clip.md)** | Play audio file through avatar | [01-quickstart](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/01-quickstart) |
+| 2 | **[Live Microphone](examples/avatar-with-microphone.md)** | Real-time mic → avatar | [02-microphone](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/02-microphone) |
+| 3 | **[AI Conversation](examples/livekit-openai-agent.md)** | OpenAI voice chat with avatar | [03-ai-conversation](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/03-ai-conversation) |
+| 4 | **Streaming Server** | WebSocket → LiveKit room | [04-streaming-server](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/04-streaming-server) |
+| 5 | **Web UI** | Browser-based Gradio interface | [05-web-ui](https://github.com/bithuman-product/examples/tree/main/public-sdk-examples/05-web-ui) |
 
-**[Live Microphone Avatar](examples/avatar-with-microphone.md)**
-- Real-time avatar from microphone
-- **Good for**: Voice assistants, kiosks
-- **Time**: 10 minutes
+## Full-Stack Examples
 
-### Web Apps
-
-**[OpenAI Agent](examples/livekit-openai-agent.md)**
-- Full AI conversation in browser
-- **Good for**: Chatbots, customer service
-- **Time**: 15 minutes
-
-**[Apple Local Agent](examples/livekit-apple-local.md)**
-- Private AI using Mac's speech
-- **Good for**: Privacy apps, offline use
-- **Time**: 20 minutes
-
-**[Raspberry Pi Agent](examples/livekit-raspberry-pi.md)**
-- Run on Raspberry Pi
-- **Good for**: IoT, edge devices
-- **Time**: 30 minutes
-
-### Mobile Apps
-
-**[Flutter Integration](examples/flutter/)**
-- Cross-platform mobile/web app
-- **Good for**: Mobile apps, cross-platform
-- **Time**: 25 minutes
+| Example | What It Does | Source |
+|---------|-------------|--------|
+| **Docker App** | Complete app: LiveKit + OpenAI + Web UI | [public-docker-example](https://github.com/bithuman-product/examples/tree/main/public-docker-example) |
+| **[Apple Local Agent](examples/livekit-apple-local.md)** | 100% offline on macOS (Siri + Ollama) | [public-macos-offline-example](https://github.com/bithuman-product/examples/tree/main/public-macos-offline-example) |
+| **[Raspberry Pi](examples/livekit-raspberry-pi.md)** | Edge deployment on Raspberry Pi | — |
+| **Java Client** | WebSocket streaming from Java | [public-java-example](https://github.com/bithuman-product/examples/tree/main/public-java-example) |
+| **[Self-Hosted Plugin](examples/livekit-bithuman-plugin-self-hosted.md)** | Self-hosted LiveKit plugin | — |
 
 ---
 
-## Before You Start
+## Prerequisites
 
 ```bash
-# Install SDK
 pip install bithuman --upgrade
-
-# Set up environment
-export BITHUMAN_API_SECRET="your_secret"
-export BITHUMAN_MODEL_PATH="/path/to/model.imx"
+export BITHUMAN_API_SECRET="sk_bh_..."
 ```
 
-**Get your setup:**
-- **API secret**: [imaginex.bithuman.ai](https://imaginex.bithuman.ai)
-- **Avatar models**: Download from Community page
-- **Source code**: [GitHub Examples Repository](https://github.com/bithuman-product/examples/tree/main/public-docs/examples)
-
-<!-- Image removed: download models screenshot -->
-*Download .imx models from the Community page*
+- **API secret**: [imaginex.bithuman.ai](https://imaginex.bithuman.ai/#developer)
+- **Avatar models**: Download `.imx` files from [Community Models](https://imaginex.bithuman.ai/#community)
+- **All source code**: [github.com/bithuman-product/examples](https://github.com/bithuman-product/examples)
 
 ---
 
-## Which Example?
-
-**New to bitHuman?** → [Audio Clip Avatar](examples/avatar-with-audio-clip.md)
-
-**Want real-time?** → [Live Microphone Avatar](examples/avatar-with-microphone.md)
-
-**Building web apps?** → [OpenAI Agent](examples/livekit-openai-agent.md)
-
-**Need privacy?** → [Apple Local Agent](examples/livekit-apple-local.md)
-
-**Using IoT/edge?** → [Raspberry Pi Agent](examples/livekit-raspberry-pi.md)
-
-**Building mobile apps?** → [Flutter Integration](examples/flutter/)
-
----
-
-*Pick one and follow the guide -- you will have an avatar running in minutes.*
+**New to bitHuman?** Start with [Audio Clip](examples/avatar-with-audio-clip.md) — you'll have an avatar running in 5 minutes.
