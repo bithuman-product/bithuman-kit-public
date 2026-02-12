@@ -15,14 +15,14 @@
   "navbar": {
     "links": [
       {
-        "label": "Console",
-        "href": "https://imaginex.bithuman.ai"
+        "label": "Status",
+        "href": "https://status.bithuman.ai"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Get Started",
-      "href": "https://imaginex.bithuman.ai"
+      "href": "https://www.bithuman.ai/#live"
     }
   },
   "navigation": {
