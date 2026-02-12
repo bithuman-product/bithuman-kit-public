@@ -124,7 +124,7 @@ The AI system automatically attempts to locate the character's face and body in 
 
 When the AI cannot locate facial features automatically, you will be prompted to manually mark key points.
 
-![Help Needed](assets/images/example-help-needed.jpg)
+![Help Needed](../assets/images/example-help-needed.jpg)
 *When automatic detection needs assistance*
 
 ### Manual Marking Process
@@ -135,7 +135,7 @@ Follow these steps when prompted:
 2. **Draw a rectangle** around the entire facial area — eyes, nose, mouth, and chin
 3. **Submit** — the system will extract facial landmarks from your selection
 
-![Mark Face Points](assets/images/example-mark-face-points.jpg)
+![Mark Face Points](../assets/images/example-mark-face-points.jpg)
 *Draw a rectangle to encompass the entire facial area*
 
 The rectangle should cover all key features: both eyes, nose, mouth, and chin. No need to select individual points — just one bounding rectangle.

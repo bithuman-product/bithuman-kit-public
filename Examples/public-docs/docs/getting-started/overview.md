@@ -9,11 +9,11 @@ Get a bitHuman avatar running in 5 minutes.
 1. Sign up at [imaginex.bithuman.ai](https://imaginex.bithuman.ai)
 2. Copy your **API Secret** from the Developer page
 
-   ![API Secret](assets/images/example-api-secret.jpg)
+   ![API Secret](../assets/images/example-api-secret.jpg)
 
 3. Download an avatar model (`.imx` file) from [Community Models](https://imaginex.bithuman.ai/#community)
 
-   ![Download Model](assets/images/example-download-button.jpg)
+   ![Download Model](../assets/images/example-download-button.jpg)
 
 ## 2. Install
 
