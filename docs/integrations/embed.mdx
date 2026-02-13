@@ -1,0 +1,233 @@
+---
+title: "Embed Avatars"
+description: "Add a bitHuman avatar to any website with an iframe or JavaScript SDK."
+icon: "code"
+---
+
+Embed a bitHuman avatar directly on your website so visitors can have real-time conversations without leaving your page.
+
+---
+
+## How Embedding Works
+
+```
+Your Website                          bitHuman Cloud
+┌─────────────────────┐              ┌─────────────────────┐
+│                     │              │                     │
+│  <iframe>           │  ◄──────►   │  Avatar Session     │
+│    Avatar Widget    │   WebRTC    │  (video + audio)    │
+│  </iframe>          │              │                     │
+│                     │              │  AI Agent           │
+│  Your page content  │              │  (conversation)     │
+│                     │              │                     │
+└─────────────────────┘              └─────────────────────┘
+```
+
+The avatar runs entirely in bitHuman's cloud. Your website just needs a small embed snippet.
+
+---
+
+## Quick Start
+
+<Steps>
+  <Step title="Generate an embed token">
+    Call the embed token API from your **backend** (never expose your API secret in the browser):
+
+    ```python
+    import requests
+
+    resp = requests.post(
+        "https://api.bithuman.ai/v1/embed-tokens/request",
+        headers={"api-secret": "sk_bh_..."},
+        json={
+            "agent_id": "A78WKV4515",
+            "fingerprint": "unique-visitor-id",
+        },
+    )
+    data = resp.json()["data"]
+    token = data["token"]       # Short-lived JWT
+    session_id = data["sid"]    # Session identifier
+    ```
+  </Step>
+  <Step title="Pass the token to your frontend">
+    Send the token to your frontend via your own API endpoint:
+
+    ```javascript
+    // Your backend endpoint (Express example)
+    app.get("/api/avatar-token", async (req, res) => {
+      const response = await fetch(
+        "https://api.bithuman.ai/v1/embed-tokens/request",
+        {
+          method: "POST",
+          headers: {
+            "api-secret": process.env.BITHUMAN_API_SECRET,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            agent_id: "A78WKV4515",
+            fingerprint: req.query.fp || "anonymous",
+          }),
+        }
+      );
+      const data = await response.json();
+      res.json(data.data);
+    });
+    ```
+  </Step>
+  <Step title="Embed in your page">
+    Use the token to load the avatar widget:
+
+    ```html
+    <iframe
+      src="https://agent.viewer.bithuman.ai/A78WKV4515?token=TOKEN_HERE"
+      width="400"
+      height="400"
+      allow="microphone; camera"
+      style="border: none; border-radius: 12px;"
+    ></iframe>
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Token Details
+
+| Property | Value |
+|----------|-------|
+| **Lifetime** | 1 hour |
+| **Scope** | Single agent, single session |
+| **JWT claims** | `userId`, `sessionId`, `agentCode`, `model`, `app` |
+
+<Warning>
+**Never put your API secret in frontend code.** Always generate embed tokens from your backend server. The API secret grants full access to your account.
+</Warning>
+
+---
+
+## Complete Example (Python + HTML)
+
+### Backend (Flask)
+
+```python
+from flask import Flask, jsonify, request
+import requests
+import os
+
+app = Flask(__name__)
+
+@app.route("/api/avatar-token")
+def get_token():
+    resp = requests.post(
+        "https://api.bithuman.ai/v1/embed-tokens/request",
+        headers={"api-secret": os.environ["BITHUMAN_API_SECRET"]},
+        json={
+            "agent_id": "A78WKV4515",
+            "fingerprint": request.args.get("fp", "web-visitor"),
+        },
+    )
+    return jsonify(resp.json()["data"])
+
+if __name__ == "__main__":
+    app.run(port=3000)
+```
+
+### Frontend (HTML)
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Website with Avatar</title>
+</head>
+<body>
+  <h1>Talk to Our AI Assistant</h1>
+  <div id="avatar-container"></div>
+
+  <script>
+    async function loadAvatar() {
+      // Get token from your backend
+      const resp = await fetch("/api/avatar-token?fp=" + navigator.userAgent);
+      const { token } = await resp.json();
+
+      // Create iframe
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://agent.viewer.bithuman.ai/A78WKV4515?token=${token}`;
+      iframe.width = "400";
+      iframe.height = "400";
+      iframe.allow = "microphone; camera";
+      iframe.style.border = "none";
+      iframe.style.borderRadius = "12px";
+
+      document.getElementById("avatar-container").appendChild(iframe);
+    }
+
+    loadAvatar();
+  </script>
+</body>
+</html>
+```
+
+---
+
+## Customization
+
+### Responsive Sizing
+
+```html
+<div style="position: relative; width: 100%; max-width: 500px; aspect-ratio: 1;">
+  <iframe
+    src="https://agent.viewer.bithuman.ai/A78WKV4515?token=TOKEN"
+    allow="microphone; camera"
+    style="
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+      border-radius: 12px;
+    "
+  ></iframe>
+</div>
+```
+
+### Control the Avatar from Your Page
+
+Use the REST API to send messages to an active avatar session:
+
+```javascript
+// Make the avatar say something
+await fetch("https://api.bithuman.ai/v1/agent/A78WKV4515/speak", {
+  method: "POST",
+  headers: {
+    "api-secret": API_SECRET,  // Call from backend!
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    message: "Welcome! How can I help you today?",
+  }),
+});
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Blank iframe | Check that the token is valid and not expired (1 hour TTL) |
+| No audio | Ensure `allow="microphone"` is set on the iframe |
+| CORS errors | Embed tokens must be generated from your backend, not frontend |
+| Avatar not responding | Check agent has an active session — verify agent_id is correct |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Webhooks" icon="bell" href="/integrations/webhooks">
+    Get notified when users join sessions
+  </Card>
+  <Card title="Agent Context API" icon="message" href="/api-reference/agent-context">
+    Control what the avatar says programmatically
+  </Card>
+</CardGroup>

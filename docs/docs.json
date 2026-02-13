@@ -49,6 +49,7 @@
             "pages": [
               "introduction",
               "getting-started/quickstart",
+              "getting-started/how-it-works",
               "getting-started/prompts",
               "getting-started/media-guide",
               "getting-started/animal-mode"
@@ -57,6 +58,7 @@
           {
             "group": "Deployment",
             "pages": [
+              "deployment/avatar-sessions",
               "deployment/livekit-cloud-plugin",
               "deployment/self-hosted-gpu"
             ]
@@ -64,6 +66,7 @@
           {
             "group": "Integrations",
             "pages": [
+              "integrations/embed",
               "integrations/webhooks",
               "integrations/events",
               "integrations/flutter"
