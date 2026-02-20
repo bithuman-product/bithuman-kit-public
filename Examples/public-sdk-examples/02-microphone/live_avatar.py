@@ -12,71 +12,52 @@ import argparse
 import asyncio
 import os
 import sys
+import threading
 
+import cv2
 import numpy as np
+import sounddevice as sd
 from dotenv import load_dotenv
-from livekit import rtc
-from livekit.agents import AgentSession, utils
-from livekit.agents.voice.avatar import QueueAudioOutput
 from loguru import logger
 
 from bithuman import AsyncBithuman
 from bithuman.utils import FPSController
-from bithuman.utils.agent import LocalAudioIO, LocalVideoPlayer
 
 load_dotenv()
 logger.remove()
 logger.add(sys.stdout, level="INFO")
 
-SILENCE_TIMEOUT = 3.0  # seconds of silence before dropping buffered audio
+SAMPLE_RATE = 16000
+MIC_CHUNK = 160       # 10ms at 16kHz
+SILENCE_TIMEOUT = 3.0  # seconds of silence before draining stale audio
 
 
 async def read_and_push_audio(
     runtime: AsyncBithuman,
-    audio_io: LocalAudioIO,
+    audio_queue: asyncio.Queue,
     volume: float = 1.0,
     silent_threshold_db: int = -40,
 ):
-    """Read mic audio and push to bitHuman runtime with silence detection."""
-    # Wait for microphone to be ready
-    while audio_io._agent.input.audio is None:
-        await asyncio.sleep(0.1)
-    logger.info("Microphone ready")
+    """Read mic audio from queue and push to bitHuman runtime with silence detection."""
+    last_speech_time = asyncio.get_running_loop().time()
 
-    audio_stream = utils.audio.AudioByteStream(sample_rate=16000, num_channels=1, samples_per_channel=160)
-    buffer: asyncio.Queue[rtc.AudioFrame] = asyncio.Queue()
+    while True:
+        audio_data, rms_db = await audio_queue.get()
+        now = asyncio.get_running_loop().time()
 
-    async def read_mic():
-        async for frame in audio_io._agent.input.audio:
-            for f in audio_stream.push(frame.data):
-                await buffer.put(f)
+        if rms_db > silent_threshold_db:
+            last_speech_time = now
+        elif now - last_speech_time > SILENCE_TIMEOUT:
+            # Drain stale audio when silent too long
+            while audio_queue.qsize() > 10:
+                audio_queue.get_nowait()
 
-    async def push_to_runtime():
-        last_speech_time = asyncio.get_running_loop().time()
-        speaking = True
+        if volume != 1.0:
+            samples = np.frombuffer(audio_data, dtype=np.int16)
+            samples = np.clip(samples * volume, -32768, 32767).astype(np.int16)
+            audio_data = samples.tobytes()
 
-        while True:
-            frame = await buffer.get()
-            now = asyncio.get_running_loop().time()
-
-            if audio_io._micro_db > silent_threshold_db:
-                last_speech_time = now
-                speaking = True
-            elif now - last_speech_time > SILENCE_TIMEOUT:
-                # Drain stale audio when silent
-                while buffer.qsize() > 10:
-                    buffer.get_nowait()
-                speaking = False
-
-            audio_data = bytes(frame.data)
-            if volume != 1.0 and speaking:
-                samples = np.frombuffer(frame.data, dtype=np.int16)
-                samples = np.clip(samples * volume, -32768, 32767).astype(np.int16)
-                audio_data = samples.tobytes()
-
-            await runtime.push_audio(audio_data, frame.sample_rate, last_chunk=False)
-
-    await asyncio.gather(read_mic(), push_to_runtime())
+        await runtime.push_audio(audio_data, SAMPLE_RATE, last_chunk=False)
 
 
 async def main():
@@ -88,37 +69,82 @@ async def main():
     parser.add_argument("--echo", action="store_true", help="Play avatar audio back through speakers")
     args = parser.parse_args()
 
+    if not args.model:
+        raise ValueError("Set --model or BITHUMAN_AVATAR_MODEL")
+
     runtime = await AsyncBithuman.create(
         model_path=args.model, api_secret=args.api_secret, input_buffer_size=5,
     )
 
-    audio_io = LocalAudioIO(AgentSession(), QueueAudioOutput(), buffer_size=3)
-    await audio_io.start()
+    width, height = runtime.get_frame_size()
+    cv2.namedWindow("bitHuman", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("bitHuman", width, height)
 
-    video_player = LocalVideoPlayer(window_size=runtime.get_frame_size(), buffer_size=3)
-    fps = FPSController(target_fps=25)
+    loop = asyncio.get_running_loop()
+    audio_queue: asyncio.Queue = asyncio.Queue()
+    speaker_buf = bytearray()
+    speaker_lock = threading.Lock()
 
+    def mic_callback(indata, frames, time_info, status):
+        """Sounddevice callback: convert float32 mic input to int16, compute dB."""
+        samples = indata[:, 0].copy()
+        int16 = (samples * 32767).astype(np.int16)
+        rms = np.sqrt(np.mean(samples ** 2))
+        db = 20 * np.log10(rms + 1e-9)
+        asyncio.run_coroutine_threadsafe(audio_queue.put((int16.tobytes(), db)), loop)
+
+    def speaker_callback(outdata, frames, time_info, status):
+        """Sounddevice callback: drain buffered avatar audio to speakers."""
+        n_bytes = frames * 2  # int16 = 2 bytes per sample
+        with speaker_lock:
+            avail = min(len(speaker_buf), n_bytes)
+            outdata[:avail // 2, 0] = np.frombuffer(speaker_buf[:avail], dtype=np.int16)
+            outdata[avail // 2:, 0] = 0
+            del speaker_buf[:avail]
+
+    mic_stream = sd.InputStream(
+        samplerate=SAMPLE_RATE, channels=1, dtype="float32",
+        blocksize=MIC_CHUNK, callback=mic_callback,
+    )
+    speaker_stream = None
+    if args.echo:
+        speaker_stream = sd.OutputStream(
+            samplerate=SAMPLE_RATE, channels=1, dtype="int16",
+            blocksize=640, callback=speaker_callback,
+        )
+        speaker_stream.start()
+
+    mic_stream.start()
+    logger.info("Microphone started — press Q in the video window to quit")
+
+    await runtime.start()
     mic_task = asyncio.create_task(
-        read_and_push_audio(runtime, audio_io, args.volume, args.silent_threshold_db)
+        read_and_push_audio(runtime, audio_queue, args.volume, args.silent_threshold_db)
     )
 
+    fps = FPSController(target_fps=25)
     try:
-        async for frame in runtime.run(out_buffer_empty=video_player.buffer_empty, idle_timeout=0.5):
+        async for frame in runtime.run(idle_timeout=0.5):
             sleep_time = fps.wait_next_frame(sleep=False)
             if sleep_time > 0:
                 await asyncio.sleep(sleep_time)
 
             if frame.has_image:
-                await video_player.capture_frame(frame, fps=fps.average_fps, exp_time=runtime.get_expiration_time())
+                cv2.imshow("bitHuman", frame.bgr_image)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
 
             if args.echo and frame.audio_chunk:
-                await audio_io.capture_frame(frame.audio_chunk)
+                with speaker_lock:
+                    speaker_buf.extend(frame.audio_chunk.array.tobytes())
 
             fps.update()
     finally:
         mic_task.cancel()
-        await video_player.aclose()
-        await audio_io.aclose()
+        mic_stream.stop()
+        if speaker_stream:
+            speaker_stream.stop()
+        cv2.destroyAllWindows()
         await runtime.stop()
 
 

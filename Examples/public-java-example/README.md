@@ -4,7 +4,7 @@ A complete example showing how to stream audio to a bitHuman avatar server and
 receive lip-synced video frames back -- all from Java over a single WebSocket
 connection.
 
-**Tested with:** bitHuman SDK 1.6.7, Java 17, Maven 3.6+, Python 3.10
+**Tested with:** bitHuman SDK 1.7+, Java 17, Maven 3.6+, Python 3.10
 
 ## Architecture
 
@@ -46,7 +46,7 @@ The server requires Python 3.10+ with the bitHuman SDK.
 
 ```bash
 # Install Python dependencies
-pip install bithuman websockets opencv-python-headless loguru
+pip install "bithuman>=1.7.0" websockets opencv-python-headless loguru
 
 # Verify the SDK is installed
 python -c "import bithuman; print('OK')"

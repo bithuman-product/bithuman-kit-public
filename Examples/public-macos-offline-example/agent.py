@@ -24,7 +24,7 @@ logger.setLevel(logging.INFO)
 
 load_dotenv()
 
-IMX_MODEL_ROOT = os.getenv("IMX_MODEL_ROOT", "/persistent-storage/imx-models")
+IMX_MODEL_ROOT = os.getenv("IMX_MODEL_ROOT", "/imx-models")
 APPLE_SPEECH_URL = os.getenv("APPLE_SPEECH_URL", "http://host.docker.internal:8000/v1")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://host.docker.internal:11434/v1")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
@@ -32,6 +32,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
+    await ctx.wait_for_participant()
 
     models = sorted(Path(IMX_MODEL_ROOT).glob("*.imx"))
     if not models:
@@ -42,7 +43,7 @@ async def entrypoint(ctx: JobContext):
     avatar = bithuman.AvatarSession(
         model_path=str(models[0]),
         api_secret=os.getenv("BITHUMAN_API_SECRET"),
-        api_token=os.getenv("BITHUMAN_API_TOKEN"),
+        api_token=os.getenv("BITHUMAN_API_TOKEN") or None,
     )
 
     session = AgentSession(
