@@ -10,7 +10,7 @@ Build interactive AI avatars that respond to audio with real-time lip sync. Thes
 4. **Set environment variables**:
    ```bash
    export BITHUMAN_API_SECRET='your_secret'
-   export BITHUMAN_AVATAR_MODEL='/path/to/avatar.imx'
+   export BITHUMAN_MODEL_PATH='/path/to/avatar.imx'
    ```
 
 ## Examples

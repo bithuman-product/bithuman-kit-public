@@ -34,12 +34,12 @@ MIC_CHUNK = 240             # 10ms at 24kHz
 
 
 async def main():
-    model_path = os.getenv("BITHUMAN_AVATAR_MODEL")
+    model_path = os.getenv("BITHUMAN_MODEL_PATH")
     api_secret = os.getenv("BITHUMAN_API_SECRET")
     openai_key = os.getenv("OPENAI_API_KEY")
 
     if not model_path or not api_secret:
-        raise ValueError("Set BITHUMAN_AVATAR_MODEL and BITHUMAN_API_SECRET in your .env")
+        raise ValueError("Set BITHUMAN_MODEL_PATH and BITHUMAN_API_SECRET in your .env")
     if not openai_key:
         raise ValueError("Set OPENAI_API_KEY in your .env")
 

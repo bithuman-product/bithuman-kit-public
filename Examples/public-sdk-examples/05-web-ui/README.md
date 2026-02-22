@@ -15,7 +15,9 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Opens a Gradio web interface where you can select an avatar and start talking.
+Opens a Gradio web interface at http://localhost:7860 where you can select an avatar and start talking.
+
+All `.imx` files in `BITHUMAN_MODEL_ROOT` appear automatically in the avatar dropdown — named by their filename stem (e.g. `my-avatar.imx` shows as `"my-avatar"`).
 
 ## What it demonstrates
 

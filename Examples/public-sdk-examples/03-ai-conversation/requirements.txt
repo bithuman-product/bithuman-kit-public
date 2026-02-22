@@ -1,5 +1,6 @@
 bithuman>=1.7.0
 livekit-agents[openai,silero]~=1.4
+loguru>=0.7.0
 python-dotenv~=1.1
 sounddevice>=0.4
 opencv-python>=4.8

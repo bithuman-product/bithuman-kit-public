@@ -8,7 +8,7 @@ Talk to an AI and watch it respond through a lip-synced bitHuman avatar.
 pip install -r requirements.txt
 
 # Set in .env:
-#   BITHUMAN_AVATAR_MODEL=/path/to/avatar.imx
+#   BITHUMAN_MODEL_PATH=/path/to/avatar.imx
 #   BITHUMAN_API_SECRET=your_secret
 #   OPENAI_API_KEY=your_openai_key   # or your preferred LLM provider key
 

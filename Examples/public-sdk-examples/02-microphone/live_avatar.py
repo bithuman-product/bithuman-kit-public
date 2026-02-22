@@ -62,7 +62,7 @@ async def read_and_push_audio(
 
 async def main():
     parser = argparse.ArgumentParser(description="bitHuman live avatar — microphone input")
-    parser.add_argument("--model", default=os.getenv("BITHUMAN_AVATAR_MODEL"))
+    parser.add_argument("--model", default=os.getenv("BITHUMAN_MODEL_PATH"))
     parser.add_argument("--api-secret", default=os.getenv("BITHUMAN_API_SECRET"))
     parser.add_argument("--volume", type=float, default=1.0, help="Mic volume multiplier")
     parser.add_argument("--silent-threshold-db", type=int, default=-40)
@@ -70,7 +70,7 @@ async def main():
     args = parser.parse_args()
 
     if not args.model:
-        raise ValueError("Set --model or BITHUMAN_AVATAR_MODEL")
+        raise ValueError("Set --model or BITHUMAN_MODEL_PATH")
 
     runtime = await AsyncBithuman.create(
         model_path=args.model, api_secret=args.api_secret, input_buffer_size=5,

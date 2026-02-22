@@ -40,9 +40,8 @@ class BitHumanHandler(AsyncAudioVideoStreamHandler):
     """Bridges FastRTC audio/video streams with a bitHuman avatar."""
 
     AVATARS = {
-        name: str((Path(MODEL_ROOT) / f"{name}.imx").resolve())
-        for name in ("einstein", "dog", "companion")
-        if (Path(MODEL_ROOT) / f"{name}.imx").exists()
+        p.stem: str(p.resolve())
+        for p in sorted(Path(MODEL_ROOT).glob("*.imx"))
     }
 
     def __init__(self):
@@ -158,7 +157,7 @@ stream = Stream(
     additional_inputs=[
         gr.Textbox(label="Message", info="Type what you want the avatar to say"),
         gr.Textbox(label="API Key", type="password", value=os.getenv("BITHUMAN_API_SECRET")),
-        gr.Dropdown(choices=list(BitHumanHandler.AVATARS.keys()), value="companion", label="Avatar"),
+        gr.Dropdown(choices=list(BitHumanHandler.AVATARS.keys()), value=next(iter(BitHumanHandler.AVATARS), None), label="Avatar"),
     ],
     ui_args={"title": "bitHuman Avatar"},
 )

@@ -28,10 +28,6 @@ Configure Apple voices by going to System Settings. We recommend either **Siri v
 - Go to System Settings > Accessibility > Spoken Content > System Voice
 - Download Siri voices or premium Apple voices
 
-**Select and download premium voices:**
-
-Go to System Settings > Accessibility > Spoken Content > System Voice and download a Siri or premium voice.
-
 ### 3. Start bitHuman's Apple TTS/STT Services
 
 Start the bitHuman Apple voice services:
