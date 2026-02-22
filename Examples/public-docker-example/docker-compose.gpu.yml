@@ -19,7 +19,7 @@ services:
   # GPU Avatar Worker - Self-hosted GPU rendering service
   # This service runs the expression-avatar container for local GPU rendering
   expression-avatar:
-    image: docker.io/bithumanhubs/expression-avatar:latest
+    image: docker.io/sgubithuman/expression-avatar:latest
     restart: always
     # GPU support using Docker Compose v2 syntax
     deploy:
