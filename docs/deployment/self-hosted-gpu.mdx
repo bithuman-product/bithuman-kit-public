@@ -17,6 +17,25 @@ The self-hosted GPU avatar container (`docker.io/sgubithuman/expression-avatar:l
 - **Data Privacy** — Avatar images and audio never leave your infrastructure
 - **Customization** — Extend the worker with custom logic and integrations
 
+### How It Works
+
+The container is a GPU worker that joins a [LiveKit](https://livekit.io) room and streams avatar video frames in real time. Your application calls the `/launch` endpoint with LiveKit room credentials and an avatar image; the container connects to the room, listens for audio, and generates lip-synced video at 25 FPS — entirely on your GPU.
+
+```
+Your Agent (LiveKit)
+      │
+      │  POST /launch
+      │  { livekit_url, livekit_token, room_name, avatar_image }
+      ▼
+expression-avatar container
+      │
+      ├─ Joins LiveKit room as video publisher
+      ├─ Receives audio from agent via data stream
+      └─ Generates 25 FPS lip-synced video → streams to room
+             ↑
+         100% local GPU — no cloud calls during inference
+```
+
 ---
 
 ## Prerequisites
@@ -26,6 +45,7 @@ The self-hosted GPU avatar container (`docker.io/sgubithuman/expression-avatar:l
 - Docker 20.10+ or Docker Compose v2
 - bitHuman API secret (`sk_bh_...`) from the [bitHuman Console](https://www.bithuman.ai)
 - Model weights package from bitHuman (see below)
+- A running [LiveKit server](https://docs.livekit.io/home/self-hosting/local/) (or LiveKit Cloud)
 
 ---
 
@@ -62,16 +82,18 @@ docker run --gpus all -p 8089:8089 \
 ```
 
 ```bash
-# 3. Wait ~48s for startup, then check health
+# 3. Wait ~48s for startup (GPU compilation), then check health
 curl http://localhost:8089/health
-# Returns: {"status": "healthy", "service": "expression-avatar", "active_sessions": 0, ...}
+# {"status": "healthy", "service": "expression-avatar", "active_sessions": 0, "max_sessions": 8}
 ```
+
+Once healthy, the container is ready to accept avatar sessions via `/launch`.
 
 ---
 
 ## Docker Compose Setup
 
-Use the [full example](https://github.com/bithuman-product/examples/tree/main/public-docker-example) for a complete setup with LiveKit and a frontend:
+Use the [full example](https://github.com/bithuman-product/examples/tree/main/public-docker-example) for a complete setup with LiveKit, an AI agent, and a web frontend:
 
 ```bash
 git clone https://github.com/bithuman-product/examples.git
@@ -81,81 +103,281 @@ cd examples/public-docker-example
 echo "BITHUMAN_API_SECRET=sk_bh_..." > .env.gpu
 echo "OPENAI_API_KEY=sk-..." >> .env.gpu
 
+# Set your avatar image (local path or public URL):
+echo "BITHUMAN_AVATAR_IMAGE=/app/avatars/avatar.jpg" >> .env.gpu
+# or: echo "BITHUMAN_AVATAR_IMAGE=https://example.com/avatar.jpg" >> .env.gpu
+
 # Place model weights in ./models/
 # (bithuman-expression/, wav2vec2-base-960h/, dit_lite_fp16.trt)
 
+# Copy your avatar image into ./avatars/
+mkdir -p avatars
+cp /path/to/your/avatar.jpg avatars/
+
 docker compose -f docker-compose.gpu.yml up
+```
+
+Open `http://localhost:4202` to start a conversation with your GPU avatar.
+
+---
+
+## Integration Guide
+
+The container exposes a simple HTTP API. Your LiveKit agent calls `/launch` to start an avatar session. There are two ways to integrate:
+
+### Option 1: LiveKit Python Plugin (Recommended)
+
+Install the bitHuman LiveKit plugin:
+
+```bash
+pip install livekit-plugins-bithuman
+```
+
+In your LiveKit agent, point `AvatarSession` at your container's `/launch` endpoint:
+
+```python
+from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, WorkerType, cli
+from livekit.plugins import bithuman, openai, silero
+
+async def entrypoint(ctx: JobContext):
+    await ctx.connect()
+    await ctx.wait_for_participant()
+
+    avatar = bithuman.AvatarSession(
+        api_url="http://localhost:8089/launch",   # your container
+        api_secret="sk_bh_...",                   # for billing
+        avatar_image="/path/to/avatar.jpg",        # local file or HTTPS URL
+    )
+
+    session = AgentSession(
+        llm=openai.realtime.RealtimeModel(voice="coral"),
+        vad=silero.VAD.load(),
+    )
+
+    await avatar.start(session, room=ctx.room)
+    await session.start(
+        agent=Agent(instructions="You are a helpful assistant."),
+        room=ctx.room,
+    )
+
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, worker_type=WorkerType.ROOM))
+```
+
+The plugin handles room token generation and calls `/launch` automatically when a participant joins.
+
+### Option 2: Direct HTTP API
+
+You can call `/launch` directly from any HTTP client. The container joins the LiveKit room as a video publisher.
+
+```bash
+# Generate a LiveKit room token first (using livekit-server-sdk or CLI)
+TOKEN=$(livekit-token create --room my-room --identity avatar-worker \
+    --api-key devkey --api-secret your-livekit-secret)
+
+# Launch with an image URL
+curl -X POST http://localhost:8089/launch \
+  -F "livekit_url=ws://your-livekit-server:7880" \
+  -F "livekit_token=$TOKEN" \
+  -F "room_name=my-room" \
+  -F "avatar_image_url=https://example.com/avatar.jpg"
+
+# Or upload an image file directly
+curl -X POST http://localhost:8089/launch \
+  -F "livekit_url=ws://your-livekit-server:7880" \
+  -F "livekit_token=$TOKEN" \
+  -F "room_name=my-room" \
+  -F "avatar_image=@./avatar.jpg"
+```
+
+Response (async by default):
+```json
+{
+  "status": "pending",
+  "task_id": "a1b2c3d4",
+  "room_name": "my-room"
+}
+```
+
+The avatar is live in the room within ~4–6 seconds.
+
+---
+
+## HTTP API Reference
+
+All endpoints are served on port `8089` (default).
+
+### `POST /launch`
+
+Start an avatar session for a LiveKit room. The container joins the room and begins streaming lip-synced video.
+
+**Content-Type:** `multipart/form-data`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `livekit_url` | string | Yes | LiveKit server WebSocket URL (e.g. `ws://livekit:7880`) |
+| `livekit_token` | string | Yes | LiveKit room token with publish permissions |
+| `room_name` | string | Yes | LiveKit room name (must match token) |
+| `avatar_image` | file | No* | Avatar image file upload (JPEG/PNG) |
+| `avatar_image_url` | string | No* | Avatar image HTTPS URL (alternative to file upload) |
+| `prompt` | string | No | Motion prompt (default: `"A person is talking naturally."`) |
+| `api_secret` | string | No | Override billing secret (defaults to `BITHUMAN_API_SECRET`) |
+| `async_mode` | bool | No | Return immediately (`true`, default) or wait for session to end |
+
+*Provide either `avatar_image` or `avatar_image_url`. If neither is given, a default image is used.
+
+**Response (async_mode=true):**
+```json
+{ "status": "pending", "task_id": "a1b2c3d4", "room_name": "my-room" }
+```
+
+**Error responses:**
+- `503 Service Unavailable` — container still initializing, or at session capacity
+- `400 Bad Request` — invalid image or download failed
+
+---
+
+### `GET /health`
+
+Lightweight health check. Always returns 200 once the container is running (even during model loading).
+
+```json
+{
+  "status": "healthy",
+  "service": "expression-avatar",
+  "active_sessions": 2,
+  "max_sessions": 8
+}
+```
+
+---
+
+### `GET /ready`
+
+Readiness check. Returns `200` only when the model is loaded and a session slot is available. Use this to gate traffic in load balancers or health checks.
+
+```json
+{
+  "status": "ready",
+  "model_ready": true,
+  "active_sessions": 2,
+  "available_sessions": 6,
+  "max_sessions": 8
+}
+```
+
+Returns `503` with `"status": "not_ready"` during model loading, or `"status": "at_capacity"` when all session slots are in use.
+
+---
+
+### `GET /tasks/{task_id}`
+
+Check the status of a specific session.
+
+```json
+{
+  "task_id": "a1b2c3d4",
+  "room_name": "my-room",
+  "status": "running",
+  "created_at": "2024-01-01T12:00:00",
+  "completed_at": null,
+  "error": null
+}
+```
+
+Status values: `pending` → `running` → `completed` / `failed` / `cancelled`
+
+---
+
+### `POST /tasks/{task_id}/stop`
+
+Stop a running session and release the session slot.
+
+```bash
+curl -X POST http://localhost:8089/tasks/a1b2c3d4/stop
+```
+
+---
+
+### `GET /benchmark`
+
+Run an inference benchmark and return per-stage timing. Useful for verifying GPU performance.
+
+```bash
+curl "http://localhost:8089/benchmark?iterations=10"
+```
+
+```json
+{
+  "iterations": 10,
+  "frames_per_generate": 24,
+  "avg_ms": 79.3,
+  "fps": 302.6,
+  "stages": {
+    "dit_ms": 41.2,
+    "vae_decode_ms": 13.1,
+    "vae_encode_ms": 8.5,
+    "color_correct_ms": 6.1,
+    "postprocess_ms": 2.8,
+    "audio_ms": 7.1
+  },
+  "vram_gb": 6.2,
+  "gpu": "NVIDIA H100 80GB HBM3"
+}
+```
+
+---
+
+### `GET /test-frame`
+
+Generate a few chunks and return the last frame as a JPEG. Useful for verifying the model is producing valid output.
+
+```bash
+curl http://localhost:8089/test-frame --output frame.jpg
+open frame.jpg
 ```
 
 ---
 
 ## Environment Variables
 
-### BITHUMAN_API_SECRET (Required)
-
-Your bitHuman API secret for billing. Each active avatar session is billed at **2 credits/minute**.
-
-```bash
--e BITHUMAN_API_SECRET=sk_bh_...
-```
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `BITHUMAN_API_SECRET` | Yes | — | API secret for billing (`sk_bh_...`) |
+| `MAX_SESSIONS` | No | `8` | Max concurrent avatar sessions |
+| `CUDA_VISIBLE_DEVICES` | No | all GPUs | Restrict to specific GPU (e.g. `0`) |
+| `FAST_DECODER_CONFIG` | No | — | Path to fast decoder config JSON (optional speedup) |
+| `FAST_DECODER_CHECKPOINT` | No | — | Path to fast decoder weights (optional speedup) |
 
 <Warning>
 Without `BITHUMAN_API_SECRET`, avatar sessions will run but usage will not be tracked or billed. This is not permitted for production use.
 </Warning>
 
-### Model Storage (Required)
-
-Mount your model weights directory at `/data/models`:
-
-```bash
--v /path/to/models:/data/models:ro
-```
-
-### How It Works
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Avatar Generation Flow                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  1. Container Startup (~48s, one-time)                      │
-│     └─ Load and compile models from /data/models            │
-│                                                             │
-│  2. Avatar Request                                          │
-│     └─ avatar_image=<custom image>                          │
-│        ├─ Encode image using local models (~2s)             │
-│        └─ Generate frames at ~25 FPS                        │
-│           → NO cloud calls (100% local GPU)                 │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
 ---
 
 ## Performance Characteristics
 
+| GPU | FPS | VRAM | Sessions |
+|-----|-----|------|----------|
+| H100 80GB | ~305 FPS | ~6 GB | up to 8 concurrent |
+| A100 40GB | ~200 FPS | ~6 GB | up to 6 concurrent |
+| RTX 4090 | ~120 FPS | ~6 GB | up to 4 concurrent |
+
 | Configuration | Time to First Frame | Description |
 |---------------|---------------------|-------------|
-| Long-running + Preset | ~4 seconds | Avatar images pre-processed, minimal GPU init |
-| Long-running + No Cache | ~6 seconds | Avatar processing on first request |
-| Cold Start | ~48 seconds | Full avatar engine initialization + GPU compilation |
+| Long-running container | ~4–6 seconds | Model loaded at startup; new sessions encode image (~2s) then stream |
+| Cold start | ~48 seconds | Full GPU model compilation on first start (cached on subsequent starts) |
 
 ### Long-Running Containers (Recommended)
 
-Containers stay running and handle multiple requests.
+Keep the container running between sessions. The model loads once at startup (~48s including GPU compilation), and subsequent sessions start in ~4–6 seconds.
 
-- Avatar engine initialized at startup (~48s one-time, includes GPU compilation)
-- With presets: first frame in ~4s
-- Without presets: first frame in ~6s
-- Subsequent frames at ~25 FPS
-
-### Cold Start Containers
-
-Each request gets a fresh container.
-
-- ~48s initialization time per container
-- Higher latency per request, lower idle costs
-- No persistent state between requests
+```bash
+docker run --gpus all -p 8089:8089 --restart always \
+    -v /path/to/models:/data/models:ro \
+    -e BITHUMAN_API_SECRET=sk_bh_... \
+    docker.io/sgubithuman/expression-avatar:latest
+```
 
 ---
 
@@ -163,12 +385,15 @@ Each request gets a fresh container.
 
 | Problem | Solution |
 |---------|----------|
-| Container won't start | Check GPU: `nvidia-smi`, verify model volume mount, check logs: `docker logs <id>` |
-| Startup takes >2 min | GPU compilation runs once — subsequent starts use cached results |
-| High first frame latency | Use long-running containers (avoid cold starts) |
-| Out of memory | Use a GPU with ≥8 GB VRAM; the model requires ~5-6 GB VRAM |
-| Billing not working | Verify `BITHUMAN_API_SECRET` is set correctly; check logs for `[HEARTBEAT]` messages |
-| Models not found | Ensure volume mount path is correct and models directory contains all required files |
+| Container won't start | Check GPU: `nvidia-smi`; verify model volume mount; check logs: `docker logs <id>` |
+| `/health` returns connection refused | Container still initializing — wait for `PREWARM: Pipeline loaded` in logs |
+| `/launch` returns `503 not_ready` | Model still loading — poll `/ready` until `model_ready: true` |
+| `/launch` returns `503 at_capacity` | All session slots in use; increase `MAX_SESSIONS` or scale horizontally |
+| Startup takes >2 minutes | GPU compilation runs once per container — subsequent starts reuse compiled cache |
+| Out of memory | Use a GPU with ≥8 GB VRAM; reduce `MAX_SESSIONS` if needed |
+| Billing not working | Verify `BITHUMAN_API_SECRET` is set; check logs for `[HEARTBEAT]` messages |
+| Models not found | Ensure volume mount is `-v /path/to/models:/data/models:ro` with all 3 required items |
+| Avatar image not showing | Check `/test-frame` — if it returns a valid JPEG, image encoding is working |
 
 ---
 
@@ -176,9 +401,9 @@ Each request gets a fresh container.
 
 <CardGroup cols={2}>
   <Card title="Docker Example" icon="docker" href="https://github.com/bithuman-product/examples/tree/main/public-docker-example">
-    Full GPU integration setup with LiveKit and frontend
+    Full GPU setup with LiveKit server, AI agent, and web frontend
   </Card>
   <Card title="LiveKit Agents" icon="book" href="https://docs.livekit.io/agents">
-    LiveKit Agents documentation
+    LiveKit Agents Python SDK documentation
   </Card>
 </CardGroup>
