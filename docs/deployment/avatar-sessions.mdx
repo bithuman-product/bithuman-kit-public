@@ -295,8 +295,8 @@ if __name__ == "__main__":
 ```bash
 # Pull and run the GPU avatar container
 docker run --gpus all -p 8089:8089 \
-    -v /path/to/model-storage:/persistent-storage/avatar-model \
-    -e AVATAR_MODEL_DIR=/persistent-storage/avatar-model \
+    -v /path/to/model-storage:/data/models \
+    -e BITHUMAN_API_SECRET=sk_bh_... \
     docker.io/bithumanhubs/expression-avatar:latest
 ```
 

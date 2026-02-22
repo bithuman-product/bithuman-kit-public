@@ -27,50 +27,46 @@ docker pull docker.io/bithumanhubs/expression-avatar:latest
 
 # Run with GPU support
 docker run --gpus all -p 8089:8089 \
-    -v /path/to/model-storage:/persistent-storage/avatar-model \
-    -e AVATAR_MODEL_DIR=/persistent-storage/avatar-model \
+    -v /path/to/model-storage:/data/models \
+    -e BITHUMAN_API_SECRET=sk_bh_... \
     docker.io/bithumanhubs/expression-avatar:latest
 ```
 
 ```bash
 # Health check
 curl http://localhost:8089/health
-# Returns: {"status": "ok", "active_workers": 0}
+# Returns: {"status": "healthy", "service": "expression-avatar", "active_sessions": 0, ...}
 ```
 
 ---
 
-## Storage Architecture
+## Environment Variables
 
-### AVATAR_MODEL_DIR (Required)
+### BITHUMAN_API_SECRET (Required)
 
-Stores the avatar generation models required for all avatar processing.
+Your bitHuman API secret for billing. Each active avatar session is billed at **2 credits/minute**.
 
-- **Mandatory** for all avatar generation
-- **Automatic download** on first container startup
-- **Persistent storage recommended** to avoid re-downloading
-- **100% local processing** — no cloud API calls after models are loaded
-- **Size**: ~2-3 GB
-
-### PRESET_AVATARS_DIR (Optional but Recommended)
-
-Stores pre-encoded avatar reference images for faster startup.
-
-```
-/persistent-storage/preset-avatars/
-├── avatar_001/
-│   └── face.jpg          # avatar_001 is the avatar_id
-├── avatar_002/
-│   └── portrait.png      # avatar_002 is the avatar_id
-└── avatar_003/
-    └── avatar.webp       # avatar_003 is the avatar_id
+```bash
+-e BITHUMAN_API_SECRET=sk_bh_...
 ```
 
-- Each subdirectory name becomes the `avatar_id`
-- Each contains one image file (`.jpg`, `.jpeg`, `.png`, or `.webp`)
-- Pre-encoded at startup for faster first frame (~4s vs ~6s)
+Get your API secret from the [bitHuman Console](https://www.bithuman.ai).
 
-### How They Work Together
+<Warning>
+Without `BITHUMAN_API_SECRET`, avatar sessions will run but usage will not be tracked or billed. This is not permitted for production use.
+</Warning>
+
+### Model Storage (Required)
+
+The container downloads model weights (~2-3 GB) on first startup. Mount a persistent directory to avoid re-downloading on restart:
+
+```bash
+-v /path/to/model-storage:/data/models
+```
+
+Models are stored at `/data/models` inside the container (the default). No extra env var needed — just mount your directory there.
+
+### How It Works
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -78,30 +74,16 @@ Stores pre-encoded avatar reference images for faster startup.
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  1. Container Startup                                       │
-│     ├─ Load models from AVATAR_MODEL_DIR (~30s, one-time)  │
-│     └─ If PRESET_AVATARS_DIR: Pre-encode images            │
+│     └─ Load models from /data/models (~30-48s, one-time)   │
 │                                                             │
-│  2. Avatar Request (Preset Avatar)                          │
-│     └─ avatar_id="avatar_001"                               │
-│        ├─ Load pre-encoded features from memory (~4s)       │
-│        └─ Generate frames using local models                │
-│           → NO cloud calls                                  │
-│                                                             │
-│  3. Avatar Request (Custom Image)                           │
+│  2. Avatar Request                                          │
 │     └─ avatar_image=<custom image>                          │
 │        ├─ Encode image using local models (~2s)             │
-│        └─ Generate frames using local models                │
-│           → NO cloud calls                                  │
+│        └─ Generate frames at ~25 FPS                        │
+│           → NO cloud calls (100% local GPU)                 │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
-
-### Storage Recommendations
-
-| Component | Size | Mount Type | Required |
-|-----------|------|------------|----------|
-| **AVATAR_MODEL_DIR** | ~2-3 GB | Persistent volume | Yes |
-| **PRESET_AVATARS_DIR** | Varies | Persistent volume | Recommended |
 
 ---
 
@@ -132,33 +114,14 @@ Each request gets a fresh container.
 
 ---
 
-## Mounting Preset Avatars
-
-```bash
-docker run --gpus all -p 8089:8089 \
-    -v /path/to/model-storage:/persistent-storage/avatar-model \
-    -v /path/to/preset-avatars:/persistent-storage/preset-avatars \
-    -e AVATAR_MODEL_DIR=/persistent-storage/avatar-model \
-    -e PRESET_AVATARS_DIR=/persistent-storage/preset-avatars \
-    docker.io/bithumanhubs/expression-avatar:latest
-```
-
-**Image requirements:**
-- High-quality portrait images (512x512 recommended)
-- Front-facing photos with visible faces
-- Good lighting and neutral expression
-- File size under 10MB
-
----
-
 ## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| Container won't start | Check GPU: `nvidia-smi`, verify storage mounts, check logs: `docker logs <id>` |
-| High first frame latency | Configure PRESET_AVATARS_DIR, use long-running containers |
-| Out of memory | Increase memory limit, reduce audio buffer, use larger GPU |
-| Slow encoding | Pre-process avatars into PRESET_AVATARS_DIR, optimize image size |
+| Container won't start | Check GPU: `nvidia-smi`, verify model volume mount, check logs: `docker logs <id>` |
+| High first frame latency | Use long-running containers (avoid cold starts) |
+| Out of memory | Use a GPU with ≥8 GB VRAM; the model requires ~5-6 GB |
+| Billing not working | Verify `BITHUMAN_API_SECRET` is set correctly; check logs for `[HEARTBEAT]` messages |
 
 ---
 
