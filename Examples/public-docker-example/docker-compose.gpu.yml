@@ -22,12 +22,11 @@ services:
   # Prerequisites:
   #   Model weights are provided by bitHuman upon access approval.
   #   Place the provided model files in ./models/ before starting.
-  #   Expected layout (~11.5 GB total):
-  #     ./models/bithuman-expression/Model_Lite/   ← DiT model weights (5.7 GB)
-  #     ./models/bithuman-expression/VAE_LTX/      ← video VAE (1.6 GB)
-  #     ./models/wav2vec2-base-960h/               ← audio encoder (1.1 GB)
-  #     ./models/dit_lite_fp16.trt                 ← TRT engine (2.9 GB)
-  #     ./models/turbo-vaed/                       ← fast VAE decoder (162 MB)
+  #   Expected layout (~5.8 GB total):
+  #     ./models/bithuman-expression/   ← video VAE (1.6 GB)
+  #     ./models/wav2vec2-base-960h/    ← audio encoder (1.1 GB)
+  #     ./models/dit_lite_fp16.trt      ← TRT engine (2.9 GB)
+  #     ./models/turbo-vaed/            ← fast VAE decoder (162 MB)
   expression-avatar:
     image: docker.io/sgubithuman/expression-avatar:latest
     restart: always
