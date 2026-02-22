@@ -40,7 +40,7 @@ expression-avatar container
 
 ## Prerequisites
 
-- NVIDIA GPU with **≥8 GB VRAM** (tested on H100, A100, RTX 4090)
+- NVIDIA GPU with **≥8 GB VRAM** (RTX 3080 or better)
 - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed
 - Docker 20.10+ or Docker Compose v2
 - bitHuman API secret (`sk_bh_...`) from the [bitHuman Console](https://www.bithuman.ai)
@@ -49,46 +49,29 @@ expression-avatar container
 
 ---
 
-## Getting Model Weights
-
-Model weights are provided by bitHuman as part of the Self-Hosted GPU access program.
-
-<Info>
-[Contact us](https://www.bithuman.ai) to request access and receive the model weights package.
-</Info>
-
-Once received, extract the weights so your directory looks like:
-
-```
-models/
-├── bithuman-expression/    ← video VAE (1.6 GB)
-├── wav2vec2-base-960h/     ← audio encoder (1.1 GB)
-├── dit_lite_fp16.trt       ← TRT engine (2.9 GB)
-└── turbo-vaed/             ← fast VAE decoder (162 MB)
-
-Total: ~5.8 GB
-```
-
----
-
 ## Quick Start
 
+Model weights download automatically on first run — just provide your API secret:
+
 ```bash
-# 1. Pull the image
+# 1. Pull the image (includes wav2vec2 audio encoder, ~360 MB)
 docker pull docker.io/sgubithuman/expression-avatar:latest
 
-# 2. Run with your model weights and API secret
+# 2. Run — proprietary weights (~4.7 GB) download automatically on first start
 docker run --gpus all -p 8089:8089 \
-    -v /path/to/models:/data/models:ro \
+    -v bithuman-models:/data/models \
     -e BITHUMAN_API_SECRET=sk_bh_... \
     docker.io/sgubithuman/expression-avatar:latest
 ```
 
 ```bash
-# 3. Wait ~48s for startup (GPU compilation), then check health
+# 3. Wait for startup (first run: ~3 min download + ~48s GPU compilation)
+#    Subsequent starts: ~48s (weights already cached in the named volume)
 curl http://localhost:8089/health
 # {"status": "healthy", "service": "expression-avatar", "active_sessions": 0, "max_sessions": 8}
 ```
+
+The `-v bithuman-models:/data/models` named volume caches the downloaded weights so you only pay the download cost once.
 
 Once healthy, the container is ready to accept avatar sessions via `/launch`.
 
@@ -110,17 +93,11 @@ echo "OPENAI_API_KEY=sk-..." >> .env.gpu
 echo "BITHUMAN_AVATAR_IMAGE=/app/avatars/avatar.jpg" >> .env.gpu
 # or: echo "BITHUMAN_AVATAR_IMAGE=https://example.com/avatar.jpg" >> .env.gpu
 
-# Place model weights in ./models/
-# Expected layout:
-#   models/bithuman-expression/   (VAE_LTX contents, 1.6 GB)
-#   models/wav2vec2-base-960h/    (1.1 GB)
-#   models/dit_lite_fp16.trt      (2.9 GB)
-#   models/turbo-vaed/            (162 MB)
-
 # Copy your avatar image into ./avatars/
 mkdir -p avatars
 cp /path/to/your/avatar.jpg avatars/
 
+# Model weights download automatically on first run — nothing to pre-download!
 docker compose -f docker-compose.gpu.yml up
 ```
 
@@ -329,7 +306,7 @@ curl "http://localhost:8089/benchmark?iterations=10"
     "audio_ms": 7.1
   },
   "vram_gb": 6.2,
-  "gpu": "NVIDIA H100 80GB HBM3"
+  "gpu": "NVIDIA GPU"
 }
 ```
 
@@ -350,9 +327,10 @@ open frame.jpg
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `BITHUMAN_API_SECRET` | Yes | — | API secret for billing (`sk_bh_...`) |
+| `BITHUMAN_API_SECRET` | Yes | — | API secret for billing and weight download (`sk_bh_...`) |
 | `MAX_SESSIONS` | No | `8` | Max concurrent avatar sessions |
 | `CUDA_VISIBLE_DEVICES` | No | all GPUs | Restrict to specific GPU (e.g. `0`) |
+| `BITHUMAN_API_URL` | No | `https://api.bithuman.ai` | Override API endpoint (for testing) |
 | `FAST_DECODER_CONFIG` | No | — | Path to fast decoder config JSON (optional speedup) |
 | `FAST_DECODER_CHECKPOINT` | No | — | Path to fast decoder weights (optional speedup) |
 
@@ -364,11 +342,11 @@ Without `BITHUMAN_API_SECRET`, avatar sessions will run but usage will not be tr
 
 ## Performance Characteristics
 
-| GPU | FPS | VRAM | Sessions |
-|-----|-----|------|----------|
-| H100 80GB | ~305 FPS | ~6 GB | up to 8 concurrent |
-| A100 40GB | ~200 FPS | ~6 GB | up to 6 concurrent |
-| RTX 4090 | ~120 FPS | ~6 GB | up to 4 concurrent |
+| GPU Tier | VRAM Usage | Concurrent Sessions |
+|----------|------------|---------------------|
+| High-end (data center) | ~6 GB | up to 8 concurrent |
+| High-end (consumer) | ~6 GB | up to 4 concurrent |
+| Mid-range | ~6 GB | up to 2 concurrent |
 
 | Configuration | Time to First Frame | Description |
 |---------------|---------------------|-------------|
@@ -381,7 +359,7 @@ Keep the container running between sessions. The model loads once at startup (~4
 
 ```bash
 docker run --gpus all -p 8089:8089 --restart always \
-    -v /path/to/models:/data/models:ro \
+    -v bithuman-models:/data/models \
     -e BITHUMAN_API_SECRET=sk_bh_... \
     docker.io/sgubithuman/expression-avatar:latest
 ```
@@ -392,14 +370,16 @@ docker run --gpus all -p 8089:8089 --restart always \
 
 | Problem | Solution |
 |---------|----------|
-| Container won't start | Check GPU: `nvidia-smi`; verify model volume mount; check logs: `docker logs <id>` |
+| Container won't start | Check GPU: `nvidia-smi`; check logs: `docker logs <id>` |
+| First start takes >5 minutes | Normal — weights are downloading (~4.7 GB). Check logs for download progress. |
+| Download fails with 401 | Verify `BITHUMAN_API_SECRET` is set and valid (`sk_bh_...`) |
+| Download fails with connection error | Check outbound internet access from the container |
 | `/health` returns connection refused | Container still initializing — wait for `PREWARM: Pipeline loaded` in logs |
 | `/launch` returns `503 not_ready` | Model still loading — poll `/ready` until `model_ready: true` |
 | `/launch` returns `503 at_capacity` | All session slots in use; increase `MAX_SESSIONS` or scale horizontally |
-| Startup takes >2 minutes | GPU compilation runs once per container — subsequent starts reuse compiled cache |
+| Startup takes >2 minutes (after download) | GPU compilation runs once per container — subsequent starts reuse compiled cache |
 | Out of memory | Use a GPU with ≥8 GB VRAM; reduce `MAX_SESSIONS` if needed |
 | Billing not working | Verify `BITHUMAN_API_SECRET` is set; check logs for `[HEARTBEAT]` messages |
-| Models not found | Ensure volume mount is `-v /path/to/models:/data/models:ro` with all 3 required items |
 | Avatar image not showing | Check `/test-frame` — if it returns a valid JPEG, image encoding is working |
 
 ---
