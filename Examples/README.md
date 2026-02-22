@@ -11,7 +11,7 @@ Full documentation is available at **[docs.bithuman.ai](https://docs.bithuman.ai
 | Directory | Description |
 |-----------|-------------|
 | [public-sdk-examples/](public-sdk-examples/) | Python SDK examples (quickstart, microphone, AI conversation, streaming, web UI) |
-| [public-docker-example/](public-docker-example/) | Docker Compose app with LiveKit + OpenAI + Web UI |
+| [public-docker-example/](public-docker-example/) | Docker Compose app with LiveKit + Web UI |
 | [public-java-example/](public-java-example/) | Java WebSocket streaming client |
 | [public-livekit-ui-example/](public-livekit-ui-example/) | Example Agent UI for LiveKit |
 | [public-macos-offline-example/](public-macos-offline-example/) | 100% offline macOS setup with Ollama + Apple Speech |

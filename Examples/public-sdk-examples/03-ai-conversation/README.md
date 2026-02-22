@@ -10,7 +10,7 @@ pip install -r requirements.txt
 # Set in .env:
 #   BITHUMAN_AVATAR_MODEL=/path/to/avatar.imx
 #   BITHUMAN_API_SECRET=your_secret
-#   OPENAI_API_KEY=your_openai_key
+#   OPENAI_API_KEY=your_openai_key   # or your preferred LLM provider key
 
 python local_agent.py
 ```
@@ -28,6 +28,7 @@ python webrtc_agent.py dev
 
 ## What it demonstrates
 
-- **local_agent.py**: OpenAI Realtime → bitHuman avatar in a local window
-- **webrtc_agent.py**: Same AI, but published to a LiveKit room via `VideoGenerator`
+- **local_agent.py**: Cloud LLM → bitHuman avatar in a local window
+- **webrtc_agent.py**: Same setup, but published to a LiveKit room via `VideoGenerator`
 - Both use the same `AsyncBithuman.create()` runtime under the hood
+- The LLM provider (OpenAI in the example) can be swapped for any compatible service

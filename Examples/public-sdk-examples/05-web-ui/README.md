@@ -10,7 +10,7 @@ pip install -r requirements.txt
 # Set in .env:
 #   BITHUMAN_MODEL_ROOT=/path/to/models  (directory with .imx files)
 #   BITHUMAN_API_SECRET=your_secret
-#   OPENAI_API_KEY=your_openai_key
+#   OPENAI_API_KEY=your_openai_key   # or your preferred LLM provider key
 
 python app.py
 ```
@@ -21,4 +21,4 @@ Opens a Gradio web interface where you can select an avatar and start talking.
 
 - FastRTC `AsyncAudioVideoStreamHandler` for browser-based WebRTC
 - Gradio UI with avatar selection dropdown
-- Full AI conversation pipeline: mic → OpenAI Realtime → bitHuman → video stream
+- Full AI conversation pipeline: mic → cloud LLM → bitHuman → video stream

@@ -5,7 +5,7 @@ A local deployment of bitHuman's AI visual agent with real-time conversation cap
 ## What You Need
 
 - Docker and Docker Compose (**For MacOS we strongly recommend [OrbStack](https://orbstack.dev/) for better performance and easier management**)
-- API keys: `BITHUMAN_API_SECRET` and `OPENAI_API_KEY`
+- API keys: `BITHUMAN_API_SECRET` and your preferred LLM provider key
 - `.imx` model files (place in `./models/` directory) for CPU mode
 
 ## Quick Setup
@@ -20,7 +20,8 @@ Create a `.env` file:
 
 ```bash
 BITHUMAN_API_SECRET=your_api_secret_here
-OPENAI_API_KEY=your_openai_key_here
+# Add your preferred LLM provider key, e.g.:
+# OPENAI_API_KEY=your_openai_key_here
 ```
 
 ### 2. Add Models

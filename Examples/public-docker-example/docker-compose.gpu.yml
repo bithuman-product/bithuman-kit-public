@@ -17,16 +17,14 @@ services:
         condition: service_started
 
   # GPU Avatar Worker - Self-hosted GPU rendering service
-  # This service runs the expression-avatar container for local GPU rendering
+  # This service runs the expression-avatar container for local GPU rendering.
   #
-  # Prerequisites:
-  #   Model weights are provided by bitHuman upon access approval.
-  #   Place the provided model files in ./models/ before starting.
-  #   Expected layout (~5.8 GB total):
-  #     ./models/bithuman-expression/   ← video VAE (1.6 GB)
-  #     ./models/wav2vec2-base-960h/    ← audio encoder (1.1 GB)
-  #     ./models/dit_lite_fp16.trt      ← TRT engine (2.9 GB)
-  #     ./models/turbo-vaed/            ← fast VAE decoder (162 MB)
+  # Model weights (~5 GB) download automatically on first run using your
+  # BITHUMAN_API_SECRET. They are cached in the 'bithuman-models' Docker volume
+  # so subsequent starts are fast.
+  #
+  # To use pre-downloaded weights instead, replace the named volume with:
+  #   - ./models:/data/models:ro
   expression-avatar:
     image: docker.io/sgubithuman/expression-avatar:latest
     restart: always
@@ -42,8 +40,8 @@ services:
       - BITHUMAN_API_SECRET=${BITHUMAN_API_SECRET}
       - CUDA_VISIBLE_DEVICES=0  # Use first GPU
     volumes:
-      # Mount directory containing model weights provided by bitHuman
-      - ./models:/data/models:ro
+      # Named volume caches downloaded weights between restarts (~5 GB, populated on first run)
+      - bithuman-models:/data/models:rw
     networks:
       - livekit-gpu-network
     healthcheck:
@@ -136,4 +134,5 @@ networks:
     driver: bridge  # Default Docker bridge network
 
 # Docker volumes for persistent data
-volumes: {}
+volumes:
+  bithuman-models:  # Persists downloaded model weights across restarts
