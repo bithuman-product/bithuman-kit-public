@@ -78,7 +78,7 @@ async def entrypoint(ctx: JobContext):
     # Create the avatar session (cloud-hosted)
     avatar = bithuman.AvatarSession(
         avatar_id=os.getenv("BITHUMAN_AGENT_ID"),    # e.g. "A78WKV4515"
-        api_secret=os.getenv("BITHUMAN_API_SECRET"),  # e.g. "sk_bh_..."
+        api_secret=os.getenv("BITHUMAN_API_SECRET"),
     )
 
     # Create the agent session with AI components
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
 ```bash
 # Required
-export BITHUMAN_API_SECRET="sk_bh_..."          # From www.bithuman.ai/#developer
+export BITHUMAN_API_SECRET="your_api_secret"          # From www.bithuman.ai/#developer
 export BITHUMAN_AGENT_ID="A78WKV4515"           # Your agent's ID
 export OPENAI_API_KEY="sk-..."                   # For STT, LLM, TTS
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
 ```bash
 # Required
-export BITHUMAN_API_SECRET="sk_bh_..."
+export BITHUMAN_API_SECRET="your_api_secret"
 export BITHUMAN_MODEL_PATH="/path/to/avatar.imx"
 export OPENAI_API_KEY="sk-..."
 
@@ -296,7 +296,7 @@ if __name__ == "__main__":
 # Pull and run the GPU avatar container
 docker run --gpus all -p 8089:8089 \
     -v /path/to/model-storage:/data/models \
-    -e BITHUMAN_API_SECRET=sk_bh_... \
+    -e BITHUMAN_API_SECRET=your_api_secret \
     docker.io/sgubithuman/expression-avatar:latest
 ```
 
@@ -304,7 +304,7 @@ docker run --gpus all -p 8089:8089 \
 
 ```bash
 # Required
-export BITHUMAN_API_SECRET="sk_bh_..."
+export BITHUMAN_API_SECRET="your_api_secret"
 export GPU_WORKER_URL="http://localhost:8089"
 export OPENAI_API_KEY="sk-..."
 
@@ -463,7 +463,7 @@ async def main():
     # Initialize the runtime
     runtime = await AsyncBithuman.create(
         model_path="avatar.imx",
-        api_secret="sk_bh_...",
+        api_secret="your_api_secret",
     )
     await runtime.start()
 
@@ -500,7 +500,7 @@ cd examples/public-docker-example
 
 # Configure
 cat > .env << 'EOF'
-BITHUMAN_API_SECRET=sk_bh_...
+BITHUMAN_API_SECRET=your_api_secret
 OPENAI_API_KEY=sk-...
 LIVEKIT_URL=wss://your-project.livekit.cloud
 LIVEKIT_API_KEY=APIxxxxxxxx
