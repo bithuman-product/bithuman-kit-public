@@ -10,7 +10,7 @@ icon: "gpu-card"
 
 ## Overview
 
-The self-hosted GPU avatar container (`docker.io/bithumanhubs/expression-avatar:latest`) enables production-grade avatar generation on your own GPU infrastructure.
+The self-hosted GPU avatar container (`docker.io/sgubithuman/expression-avatar:latest`) enables production-grade avatar generation on your own GPU infrastructure.
 
 - **Full Control** — Complete control over deployment, scaling, and configuration
 - **Cost Optimization** — Pay only for the GPU resources you use
@@ -23,13 +23,13 @@ The self-hosted GPU avatar container (`docker.io/bithumanhubs/expression-avatar:
 
 ```bash
 # Pull the latest image
-docker pull docker.io/bithumanhubs/expression-avatar:latest
+docker pull docker.io/sgubithuman/expression-avatar:latest
 
 # Run with GPU support
 docker run --gpus all -p 8089:8089 \
     -v /path/to/model-storage:/data/models \
     -e BITHUMAN_API_SECRET=sk_bh_... \
-    docker.io/bithumanhubs/expression-avatar:latest
+    docker.io/sgubithuman/expression-avatar:latest
 ```
 
 ```bash
