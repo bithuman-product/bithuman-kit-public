@@ -120,12 +120,19 @@ def poll_status(agent_id: str, interval: int = 5, timeout: int = 600):
             continue
 
         status = data["status"]
+        progress = data.get("progress")
+        progress_msg = data.get("progress_msg", "")
         elapsed = int(time.time() - start)
         mins, secs = divmod(elapsed, 60)
         spinner = SPINNER[tick % len(SPINNER)]
         tick += 1
 
-        print(f"\r  {spinner} [{mins}:{secs:02d}] Status: {status}        ", end="", flush=True)
+        if progress is not None:
+            pct = int(progress * 100)
+            bar = "=" * (pct // 5) + " " * (20 - pct // 5)
+            print(f"\r  {spinner} [{mins}:{secs:02d}] [{bar}] {pct}% {progress_msg}      ", end="", flush=True)
+        else:
+            print(f"\r  {spinner} [{mins}:{secs:02d}] {status}        ", end="", flush=True)
 
         if status == "ready":
             print(f"\r  Done! Agent ready in {mins}m {secs}s.            ")
