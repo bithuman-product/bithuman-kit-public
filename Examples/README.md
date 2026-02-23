@@ -1,20 +1,38 @@
 # bitHuman Examples
 
-Public examples and integrations for the [bitHuman](https://bithuman.io) avatar platform.
+Build and deploy AI avatars with real-time lip sync. Pick the approach that fits your use case.
 
-## Documentation
+Full documentation at **[docs.bithuman.ai](https://docs.bithuman.ai)**.
 
-Full documentation is available at **[docs.bithuman.ai](https://docs.bithuman.ai)**.
+## Platform API
 
-## Examples
+Programmatic agent management -- no SDK or local runtime needed.
 
-| Directory | Description |
-|-----------|-------------|
-| [public-sdk-examples/](public-sdk-examples/) | Python SDK examples (quickstart, microphone, AI conversation, streaming, web UI) |
-| [public-docker-example/](public-docker-example/) | Docker Compose app with LiveKit + Web UI |
-| [public-java-example/](public-java-example/) | Java WebSocket streaming client |
-| [public-livekit-ui-example/](public-livekit-ui-example/) | Example Agent UI for LiveKit |
-| [public-macos-offline-example/](public-macos-offline-example/) | 100% offline macOS setup with Ollama + Apple Speech |
+| Example | Description |
+|---------|-------------|
+| [api/](api/) | Create agents, poll status, update prompts, generate dynamics, upload files |
+
+## Avatar Integration
+
+Four combinations of model type and deployment mode.
+
+| Example | Model | Deployment | GPU Required | What You Need |
+|---------|-------|------------|:------------:|---------------|
+| [essence-cloud/](essence-cloud/) | Essence (CPU) | bitHuman Cloud | No | API secret + agent ID |
+| [essence-selfhosted/](essence-selfhosted/) | Essence (CPU) | Your machine | No | API secret + `.imx` model file |
+| [expression-cloud/](expression-cloud/) | Expression (GPU) | bitHuman Cloud | No | API secret + face image |
+| [expression-selfhosted/](expression-selfhosted/) | Expression (GPU) | Your machine | Yes (8GB+) | API secret + NVIDIA GPU |
+
+**Essence** avatars use pre-built `.imx` model files. **Expression** avatars accept any face image and render with a GPU-powered 1.3B parameter model.
+
+## Language & Framework Integrations
+
+| Example | Description |
+|---------|-------------|
+| [integrations/java/](integrations/java/) | Java WebSocket client for streaming avatar frames |
+| [integrations/nextjs-ui/](integrations/nextjs-ui/) | Drop-in Next.js web interface for LiveKit rooms |
+| [integrations/web-ui/](integrations/web-ui/) | Gradio browser UI with FastRTC |
+| [integrations/macos-offline/](integrations/macos-offline/) | 100% offline macOS with Ollama + Apple Speech |
 
 ## Quick Start
 
@@ -22,19 +40,19 @@ Full documentation is available at **[docs.bithuman.ai](https://docs.bithuman.ai
 git clone https://github.com/bithuman-product/examples.git
 cd examples
 
-# Pick an example
-cd public-sdk-examples/01-quickstart   # Simplest — play audio through avatar
-cd public-docker-example               # Full app with Docker
-cd public-macos-offline-example        # Offline macOS
+# Pick an example directory and follow its README
+cd api/                        # REST API scripts
+cd essence-cloud/              # Easiest -- cloud avatar, no models needed
+cd essence-selfhosted/         # Local .imx model
+cd expression-cloud/           # GPU avatar via cloud
+cd expression-selfhosted/      # GPU avatar on your hardware
 ```
-
-Each directory has its own README with setup instructions.
 
 ## Resources
 
 - [bitHuman Documentation](https://docs.bithuman.ai)
-- [bitHuman Runtime (PyPI)](https://pypi.org/project/bithuman/)
 - [bitHuman Console](https://www.bithuman.ai)
+- [bitHuman Runtime (PyPI)](https://pypi.org/project/bithuman/)
 - [bitHuman Website](https://bithuman.io)
 
 ## License

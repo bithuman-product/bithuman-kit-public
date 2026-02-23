@@ -1,0 +1,24 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache git
+
+RUN git clone --depth 1 https://github.com/bithuman-product/examples.git /tmp/repo && \
+    cp -r /tmp/repo/integrations/nextjs-ui/. . && \
+    rm -rf /tmp/repo
+
+RUN npm cache clean --force && \
+    npm install --force
+
+ARG LIVEKIT_URL
+ENV NEXT_PUBLIC_LIVEKIT_URL=$LIVEKIT_URL
+ENV LIVEKIT_URL=$LIVEKIT_URL
+
+RUN npm run build
+
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

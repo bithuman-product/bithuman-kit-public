@@ -1,0 +1,104 @@
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    restart: always
+    ports:
+      - "17880:17880"
+      - "17881:17881"
+      - "50700-50720:50700-50720/udp"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+    networks:
+      - bh-network
+    depends_on:
+      redis:
+        condition: service_started
+
+  # GPU Avatar Worker -- self-hosted expression-avatar container.
+  # Model weights (~5 GB) download automatically on first run.
+  # They are cached in the 'bithuman-models' Docker volume.
+  expression-avatar:
+    image: docker.io/sgubithuman/expression-avatar:latest
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - BITHUMAN_API_SECRET=${BITHUMAN_API_SECRET}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    volumes:
+      - bithuman-models:/data/models:rw
+    networks:
+      - bh-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8089/health')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 120s   # ~48s GPU compilation + buffer
+
+  agent:
+    build:
+      context: .
+      dockerfile: agent.dockerfile
+    entrypoint: ["python", "agent.py", "start"]
+    restart: always
+    environment:
+      - AVATAR_MODE=gpu
+      - LIVEKIT_URL=ws://livekit:17880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
+      - CUSTOM_GPU_URL=http://expression-avatar:8089/launch
+      - CUSTOM_GPU_TOKEN=${CUSTOM_GPU_TOKEN:-}
+      - AVATAR_ID=${AVATAR_ID:-}
+      - BITHUMAN_AVATAR_IMAGE=${BITHUMAN_AVATAR_IMAGE:-}
+      - OPENAI_VOICE=${OPENAI_VOICE:-alloy}
+    env_file:
+      - ./.env
+    volumes:
+      - ./avatars:/app/avatars
+      - ./agent.py:/app/agent.py
+    networks:
+      - bh-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      livekit:
+        condition: service_started
+
+  frontend:
+    build:
+      context: .
+      dockerfile: webui.dockerfile
+      args:
+        LIVEKIT_URL: ws://localhost:17880
+    restart: always
+    ports:
+      - "4202:4202"
+    environment:
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
+      - PORT=4202
+    networks:
+      - bh-network
+    depends_on:
+      livekit:
+        condition: service_started
+
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - bh-network
+
+networks:
+  bh-network:
+    driver: bridge
+
+volumes:
+  bithuman-models:   # Persists downloaded model weights (~5 GB)

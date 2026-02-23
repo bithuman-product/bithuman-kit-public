@@ -1,0 +1,66 @@
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    restart: always
+    ports:
+      - "17880:17880"
+      - "17881:17881"
+      - "50700-50720:50700-50720/udp"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+    networks:
+      - bh-network
+    depends_on:
+      - redis
+
+  agent:
+    build:
+      context: .
+      dockerfile: agent.dockerfile
+    entrypoint: ["python", "agent.py", "start"]
+    restart: always
+    environment:
+      - LIVEKIT_URL=ws://livekit:17880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
+      - IMX_MODEL_ROOT=/imx-models
+    env_file:
+      - ./.env
+    volumes:
+      - ./models:/imx-models       # Mount your .imx model files here
+      - ./agent.py:/app/agent.py   # Live editing
+    networks:
+      - bh-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - livekit
+
+  frontend:
+    build:
+      context: .
+      dockerfile: webui.dockerfile
+      args:
+        LIVEKIT_URL: ws://localhost:17880
+    restart: always
+    ports:
+      - "4202:4202"
+    environment:
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
+      - PORT=4202
+    networks:
+      - bh-network
+    depends_on:
+      - livekit
+
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - bh-network
+
+networks:
+  bh-network:
+    driver: bridge
