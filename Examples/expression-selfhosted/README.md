@@ -1,15 +1,16 @@
 # Expression + Self-Hosted
 
-Run a bitHuman Expression (GPU) avatar on your own GPU hardware.
+Run a bitHuman Expression (GPU) avatar on your own hardware.
 Full local control -- audio and video stay on your machine.
 
 ## Prerequisites
 
-- NVIDIA GPU with 8GB+ VRAM (tested on H100, A100, RTX 4090)
+- NVIDIA GPU with 8 GB+ VRAM (tested on H100, A100, RTX 4090, RTX 3090)
 - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
-- Docker with GPU support
+- Docker 24+ with Compose v2
 - bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai) > Developer section)
-- A face image (JPEG/PNG)
+- OpenAI API key (for the AI conversation agent)
+- A face image (any JPEG/PNG photo)
 
 ## Verify GPU Access
 
@@ -17,9 +18,36 @@ Full local control -- audio and video stay on your machine.
 docker run --rm --gpus all nvidia/cuda:12.8.0-base-ubuntu22.04 nvidia-smi
 ```
 
-## Terminal Quickstart
+If this fails, install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) first.
 
-Start the GPU container first:
+## Quick Start (Full Stack)
+
+```bash
+# 1. Clone and enter the directory
+git clone https://github.com/bithuman-product/examples.git
+cd examples/expression-selfhosted
+
+# 2. Create your .env file
+cp .env.example .env
+# Edit .env: set BITHUMAN_API_SECRET and OPENAI_API_KEY
+
+# 3. (Optional) Use your own face image
+mkdir -p avatars
+cp /path/to/face.jpg avatars/
+# Then in .env set: BITHUMAN_AVATAR_IMAGE=/app/avatars/face.jpg
+
+# 4. Start everything
+docker compose up
+```
+
+Open **http://localhost:4202** in your browser. Click to start talking.
+
+First run takes 2-5 minutes (downloads ~5 GB model weights + GPU compilation).
+Subsequent starts take ~50 seconds.
+
+## Quick Start (GPU Container Only)
+
+If you just want the GPU container (no agent, no frontend):
 
 ```bash
 docker run --gpus all -p 8089:8089 \
@@ -28,9 +56,6 @@ docker run --gpus all -p 8089:8089 \
     sgubithuman/expression-avatar:latest
 ```
 
-First run downloads ~5 GB of model weights (cached for subsequent runs).
-Cold start takes ~48 seconds for GPU compilation.
-
 Then in another terminal:
 
 ```bash
@@ -38,38 +63,70 @@ pip install -r requirements.txt
 python quickstart.py --avatar-image face.jpg --audio-file speech.wav
 ```
 
-## Full App with Docker
+## Verify the GPU Container
 
 ```bash
-# 1. Configure environment
-cp .env.example .env
-# Edit .env: set API secret and face image
+# Health check
+curl http://localhost:8089/health
 
-# 2. (Optional) Place avatar images in ./avatars/
-mkdir -p avatars
-cp face.jpg avatars/
-# Then set BITHUMAN_AVATAR_IMAGE=/app/avatars/face.jpg in .env
+# Readiness (model loaded + available capacity)
+curl http://localhost:8089/ready
 
-# 3. Start all services (including GPU container)
-docker compose up
+# Visual test -- generates frames and returns a JPEG
+curl http://localhost:8089/test-frame -o test.jpg && open test.jpg
 ```
 
-Open [http://localhost:4202](http://localhost:4202) in your browser.
+## Architecture
 
-The Docker stack runs 5 services:
-- **expression-avatar**: GPU rendering container (port 8089 internal)
-- **LiveKit**: WebRTC server (ports 17880-17881)
-- **Agent**: AI conversation handler
-- **Frontend**: Web interface (port 4202)
-- **Redis**: State management
+The Docker Compose stack runs 5 services:
+
+```
+Browser ──WebRTC──> LiveKit ──dispatch──> Agent ──HTTP──> Expression Avatar (GPU)
+                      |                     |                    |
+                   port 17880          AI conversation      renders video
+                                       (OpenAI)            port 8089
+```
+
+| Service | Description | Port |
+|---------|-------------|------|
+| **expression-avatar** | GPU rendering (1.3B parameter model) | 8089 |
+| **livekit** | WebRTC media server | 17880 |
+| **agent** | AI conversation + avatar orchestration | (internal) |
+| **frontend** | Web UI | 4202 |
+| **redis** | LiveKit state | (internal) |
+
+## Configuration
+
+All configuration is via `.env`. See `.env.example` for all options.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BITHUMAN_API_SECRET` | Yes | API secret from bithuman.ai |
+| `OPENAI_API_KEY` | Yes | For AI conversation |
+| `BITHUMAN_AVATAR_IMAGE` | Yes* | Face image URL or container path |
+| `BITHUMAN_AGENT_ID` | Yes* | Or use a pre-configured agent ID |
+| `CUDA_VISIBLE_DEVICES` | No | GPU index, default `0` |
+| `OPENAI_VOICE` | No | TTS voice, default `coral` |
+
+\* Provide either `BITHUMAN_AVATAR_IMAGE` or `BITHUMAN_AGENT_ID`.
+
+## Multi-GPU Machines
+
+`CUDA_VISIBLE_DEVICES` in `.env` selects which physical GPU to use:
+
+```bash
+CUDA_VISIBLE_DEVICES=0   # First GPU (default)
+CUDA_VISIBLE_DEVICES=1   # Second GPU
+```
 
 ## Performance
 
 | Metric | Value |
 |--------|-------|
-| Cold start | ~48s (GPU compilation, one-time) |
+| First run | 2-5 min (download + compilation) |
+| Cold start | ~50s (GPU compilation, cached after first run) |
 | Warm start | 4-6s |
-| FPS | 305 (theoretical), 25+ (real-time) |
+| Inference | 250+ FPS (25+ real-time) |
 | VRAM | ~6 GB per session |
 | Sessions per GPU | Up to 8 concurrent |
 
@@ -77,24 +134,62 @@ The Docker stack runs 5 services:
 
 **GPU not detected?**
 ```bash
-# Check NVIDIA runtime
-docker info | grep -i runtime
-# Should show: nvidia
+docker info | grep -i runtime    # Should show: nvidia
+nvidia-smi                       # Should show your GPU
 ```
 
 **Container won't start?**
 ```bash
-# Check GPU container logs
 docker compose logs expression-avatar
 ```
 
+Common errors:
+- `No CUDA GPUs are available` -- NVIDIA Container Toolkit not installed, or wrong CUDA_VISIBLE_DEVICES
+- `BITHUMAN_API_SECRET is required` -- Set your API secret in `.env`
+- `Missing required model files` -- Weight download may have failed. Remove volume and retry:
+  ```bash
+  docker compose down -v
+  docker compose up
+  ```
+
+**Agent crashes?**
+```bash
+docker compose logs agent
+```
+- Check that `OPENAI_API_KEY` is set in `.env`
+- Check that `BITHUMAN_AVATAR_IMAGE` is a valid URL or container path
+
 **Slow first start?**
-Model weights download on first run (~5 GB). The `bithuman-models` Docker volume caches them for subsequent starts.
+First run downloads ~5 GB of model weights. The `bithuman-models` volume caches them.
+GPU compilation (torch.compile) takes ~48s on first inference.
+
+**Port conflict?**
+Change exposed ports in `.env`:
+```bash
+GPU_PORT=9089            # Expression avatar (default: 8089)
+```
 
 ## Files
 
 | File | Description |
 |------|-------------|
-| `quickstart.py` | Animate face image with audio via local GPU (terminal) |
+| `docker-compose.yml` | Full stack (GPU + agent + frontend + LiveKit + Redis) |
+| `quickstart.py` | Animate a face image with audio (standalone, no LiveKit) |
 | `agent.py` | LiveKit agent connecting to local GPU container |
-| `docker-compose.yml` | Full stack including expression-avatar GPU container |
+| `.env.example` | Environment variable template |
+| `livekit.yaml` | LiveKit server configuration |
+
+## API Reference
+
+The expression-avatar container exposes these HTTP endpoints on port 8089:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/ready` | GET | Readiness + capacity |
+| `/launch` | POST | Start avatar session (multipart form) |
+| `/tasks` | GET | List active sessions |
+| `/tasks/{id}` | GET | Session status |
+| `/tasks/{id}/stop` | POST | Stop a session |
+| `/test-frame` | GET | Generate test frame (JPEG) |
+| `/benchmark` | POST | Run inference benchmark |

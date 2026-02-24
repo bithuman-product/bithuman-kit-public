@@ -26,11 +26,12 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              device_ids: ["${CUDA_VISIBLE_DEVICES:-0}"]
               capabilities: [gpu]
     environment:
       - BITHUMAN_API_SECRET=${BITHUMAN_API_SECRET}
-      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    ports:
+      - "${GPU_PORT:-8089}:8089"   # Expose for debugging (curl localhost:8089/health)
     volumes:
       - bithuman-models:/data/models:rw
     networks:
@@ -40,7 +41,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 120s   # ~48s GPU compilation + buffer
+      start_period: 300s   # First run: ~5 GB download + ~48s compilation
 
   agent:
     build:
@@ -58,14 +59,13 @@ services:
       - BITHUMAN_AVATAR_IMAGE=${BITHUMAN_AVATAR_IMAGE:-}
       - OPENAI_VOICE=${OPENAI_VOICE:-coral}
     env_file:
-      - ./.env
+      - path: ./.env
+        required: false
     volumes:
       - ./avatars:/app/avatars
       - ./agent.py:/app/agent.py
     networks:
       - bh-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       livekit:
         condition: service_started
