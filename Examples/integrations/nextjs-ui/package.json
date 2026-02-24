@@ -7,10 +7,10 @@
   "homepage": "https://bithuman.ai",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bithuman-product/bithuman-livekit-ui-example.git"
+    "url": "https://github.com/bithuman-product/examples.git"
   },
   "bugs": {
-    "url": "https://github.com/bithuman-product/bithuman-livekit-ui-example/issues"
+    "url": "https://github.com/bithuman-product/examples/issues"
   },
   "keywords": [
     "bithuman",
@@ -27,9 +27,10 @@
   "scripts": {
     "dev": "next dev -p ${PORT:-3000}",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3000}",
     "lint": "next lint",
-    "lint:fix": "next lint --fix"
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@livekit/components-react": "^2.9.3",

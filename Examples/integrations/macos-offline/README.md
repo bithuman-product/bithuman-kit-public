@@ -8,7 +8,7 @@ A local deployment of bitHuman's AI visual agent running on Apple M2+/M3/M4 devi
 - Docker and Docker Compose (**We strongly recommend [OrbStack](https://orbstack.dev/) for better performance and easier management**)
 - `BITHUMAN_API_SECRET` (requires periodic internet access) or offline token for 100% internet-free operation (contact bitHuman team)
 - `.imx` model files (place in `./models/` directory)
-- Python 3.8+ for bitHuman's Apple plugin
+- Python 3.10+ for bitHuman's Apple plugin
 - [Ollama](https://ollama.com/) for local LLM
 
 ## Local Setup Steps

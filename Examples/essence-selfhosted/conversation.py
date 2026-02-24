@@ -40,7 +40,7 @@ async def main():
     parser.add_argument("--model", default=os.getenv("BITHUMAN_MODEL_PATH"),
                         help="Path to .imx avatar model")
     parser.add_argument("--api-secret", default=os.getenv("BITHUMAN_API_SECRET"))
-    parser.add_argument("--voice", default=os.getenv("OPENAI_VOICE", "alloy"),
+    parser.add_argument("--voice", default=os.getenv("OPENAI_VOICE", "coral"),
                         help="OpenAI voice (alloy, coral, echo, etc.)")
     args = parser.parse_args()
 

@@ -78,7 +78,7 @@ mvn -version    # should show 3.6+
 ### Step 4: Build the Java Client
 
 ```bash
-cd examples/integrations/java
+cd integrations/java
 
 # Build the fat JAR (includes all dependencies)
 mvn clean package -q

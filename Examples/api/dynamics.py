@@ -18,20 +18,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_URL = "https://api.bithuman.ai"
+BASE_URL = os.getenv("BITHUMAN_API_URL", "https://api.bithuman.ai")
 
 
 def get_headers():
-    api_secret = os.environ.get("BITHUMAN_API_SECRET")
-    if not api_secret:
-        print("Error: Set BITHUMAN_API_SECRET environment variable")
+    secret = os.getenv("BITHUMAN_API_SECRET")
+    if not secret:
+        print("Error: BITHUMAN_API_SECRET not set.")
+        print("  Get yours at https://www.bithuman.ai/#developer")
+        print("  Then: export BITHUMAN_API_SECRET='your_secret'")
         sys.exit(1)
-    return {"Content-Type": "application/json", "api-secret": api_secret}
+    return {"Content-Type": "application/json", "api-secret": secret}
 
 
 def get_dynamics(agent_id: str):
     """GET /v1/dynamics/{agent_id} -- get dynamics status and available gestures."""
-    resp = requests.get(f"{BASE_URL}/v1/dynamics/{agent_id}", headers=get_headers())
+    try:
+        resp = requests.get(f"{BASE_URL}/v1/dynamics/{agent_id}", headers=get_headers())
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
+
     data = resp.json()
 
     if not data.get("success"):
@@ -47,7 +54,8 @@ def get_dynamics(agent_id: str):
     if gestures:
         print(f"\nAvailable gestures ({len(gestures)}):")
         for name, url in gestures.items():
-            print(f"  {name}: {url[:80]}...")
+            display_url = f"{url[:80]}..." if len(url) > 80 else url
+            print(f"  {name}: {display_url}")
     else:
         print("\nNo gestures generated yet. Run with --generate to create them.")
 
@@ -56,11 +64,16 @@ def get_dynamics(agent_id: str):
 
 def generate_dynamics(agent_id: str, duration: int = 3, model: str = "seedance"):
     """POST /v1/dynamics/generate -- start dynamics generation."""
-    resp = requests.post(
-        f"{BASE_URL}/v1/dynamics/generate",
-        headers=get_headers(),
-        json={"agent_id": agent_id, "duration": duration, "model": model},
-    )
+    try:
+        resp = requests.post(
+            f"{BASE_URL}/v1/dynamics/generate",
+            headers=get_headers(),
+            json={"agent_id": agent_id, "duration": duration, "model": model},
+        )
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
+
     data = resp.json()
 
     if data.get("success"):
@@ -78,7 +91,13 @@ def poll_dynamics(agent_id: str, interval: int = 10, timeout: int = 300):
     start = time.time()
 
     while time.time() - start < timeout:
-        resp = requests.get(f"{BASE_URL}/v1/dynamics/{agent_id}", headers=get_headers())
+        try:
+            resp = requests.get(f"{BASE_URL}/v1/dynamics/{agent_id}", headers=get_headers())
+        except requests.exceptions.ConnectionError:
+            print(f"  Warning: Cannot reach {BASE_URL}, retrying...")
+            time.sleep(interval)
+            continue
+
         info = resp.json().get("data", {})
         status = info.get("status", "unknown")
         elapsed = int(time.time() - start)

@@ -25,8 +25,5 @@ RUN npm run build
 # Set production environment
 ENV NODE_ENV=production
 
-# Expose port 3000 (Next.js default)
-EXPOSE 3000
-
 # Start the application
-CMD ["npm", "start"] 
+CMD ["sh", "-c", "npx next start -p ${PORT:-3000}"] 

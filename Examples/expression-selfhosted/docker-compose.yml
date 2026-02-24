@@ -49,15 +49,14 @@ services:
     entrypoint: ["python", "agent.py", "start"]
     restart: always
     environment:
-      - AVATAR_MODE=gpu
       - LIVEKIT_URL=ws://livekit:17880
       - LIVEKIT_API_KEY=devkey
       - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
       - CUSTOM_GPU_URL=http://expression-avatar:8089/launch
       - CUSTOM_GPU_TOKEN=${CUSTOM_GPU_TOKEN:-}
-      - AVATAR_ID=${AVATAR_ID:-}
+      - BITHUMAN_AGENT_ID=${BITHUMAN_AGENT_ID:-}
       - BITHUMAN_AVATAR_IMAGE=${BITHUMAN_AVATAR_IMAGE:-}
-      - OPENAI_VOICE=${OPENAI_VOICE:-alloy}
+      - OPENAI_VOICE=${OPENAI_VOICE:-coral}
     env_file:
       - ./.env
     volumes:
@@ -70,6 +69,8 @@ services:
     depends_on:
       livekit:
         condition: service_started
+      expression-avatar:
+        condition: service_healthy
 
   frontend:
     build:

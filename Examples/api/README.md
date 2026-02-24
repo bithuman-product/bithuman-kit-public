@@ -3,6 +3,11 @@
 Manage agents, generate avatars, and download `.imx` models via REST API.
 No SDK or local runtime needed -- just Python + HTTP.
 
+## Requirements
+
+- Python 3.9+
+- `pip install -r requirements.txt`
+
 ## Setup
 
 ```bash
@@ -10,6 +15,14 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env -- add your API secret from https://www.bithuman.ai (Developer section)
 ```
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BITHUMAN_API_SECRET` | Yes | Your API secret from https://www.bithuman.ai (Developer section) |
+| `BITHUMAN_API_URL` | No | Custom API endpoint (default: `https://api.bithuman.ai`) |
+| `BITHUMAN_AGENT_ID` | No | Default agent ID for management.py |
 
 ## Scripts
 
@@ -32,6 +45,9 @@ python generation.py --prompt "You are a fitness coach" --download
 # Customize appearance with a face image
 python generation.py --prompt "A news anchor" --image https://example.com/face.jpg --download
 
+# Provide a video for appearance and audio for voice
+python generation.py --prompt "A tutor" --video https://example.com/clip.mp4 --audio https://example.com/voice.wav --download
+
 # Save .imx to a specific path
 python generation.py --prompt "A tutor" --download --output ../essence-selfhosted/models/avatar.imx
 ```
@@ -52,14 +68,24 @@ python management.py
 python management.py --agent-id A91XMB7113
 ```
 
+> **Note:** `management.py` also provides an `update_prompt(agent_id, new_prompt)` function for
+> updating an agent's system prompt programmatically. Import it in your own scripts:
+> ```python
+> from management import update_prompt
+> update_prompt("A91XMB7113", "You are a professional sales assistant.")
+> ```
+
 ### Gestures and dynamics
 
 ```bash
 # List available gestures
 python dynamics.py --agent-id A91XMB7113
 
-# Generate new gestures
+# Generate new gestures (default: 3s, seedance model)
 python dynamics.py --agent-id A91XMB7113 --generate
+
+# Custom duration and model
+python dynamics.py --agent-id A91XMB7113 --generate --duration 5 --model kling
 ```
 
 ### Live session control
@@ -70,6 +96,9 @@ python context.py --agent-id A91XMB7113 --speak "Hello! How can I help?"
 
 # Inject background context silently
 python context.py --agent-id A91XMB7113 --context "Customer is a VIP member since 2021."
+
+# Target a specific room
+python context.py --agent-id A91XMB7113 --speak "Hi there" --room-id ROOM123
 ```
 
 ### File upload

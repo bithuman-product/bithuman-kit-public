@@ -10,7 +10,7 @@ pip install -r requirements.txt
 # Set in .env:
 #   BITHUMAN_MODEL_ROOT=/path/to/models  (directory with .imx files)
 #   BITHUMAN_API_SECRET=your_secret
-#   OPENAI_API_KEY=your_openai_key   # or your preferred LLM provider key
+#   OPENAI_API_KEY=your_openai_key    # Required (uses OpenAI Realtime API)
 
 python app.py
 ```

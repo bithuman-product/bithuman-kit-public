@@ -43,14 +43,14 @@ Press `Q` to quit.
 ### Real-time microphone input
 
 ```bash
-python microphone.py --model avatar.imx
-python microphone.py --model avatar.imx --echo   # hear yourself back
+python microphone.py --model models/avatar.imx
+python microphone.py --model models/avatar.imx --echo   # hear yourself back
 ```
 
 ### AI conversation (OpenAI Realtime)
 
 ```bash
-python conversation.py --model avatar.imx
+python conversation.py --model models/avatar.imx
 ```
 
 Speak into your mic, hear the AI respond, watch the avatar lip-sync.

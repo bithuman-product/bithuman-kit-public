@@ -17,21 +17,34 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_URL = "https://api.bithuman.ai"
+BASE_URL = os.getenv("BITHUMAN_API_URL", "https://api.bithuman.ai")
 
 
 def get_headers():
-    api_secret = os.environ.get("BITHUMAN_API_SECRET")
-    if not api_secret:
-        print("Error: Set BITHUMAN_API_SECRET environment variable")
-        print("Get your API secret at https://www.bithuman.ai (Developer section)")
+    secret = os.getenv("BITHUMAN_API_SECRET")
+    if not secret:
+        print("Error: BITHUMAN_API_SECRET not set.")
+        print("  Get yours at https://www.bithuman.ai/#developer")
+        print("  Then: export BITHUMAN_API_SECRET='your_secret'")
         sys.exit(1)
-    return {"Content-Type": "application/json", "api-secret": api_secret}
+    return {"Content-Type": "application/json", "api-secret": secret}
 
 
 def validate():
     """POST /v1/validate -- verify your API secret is valid."""
-    resp = requests.post(f"{BASE_URL}/v1/validate", headers=get_headers())
+    try:
+        resp = requests.post(f"{BASE_URL}/v1/validate", headers=get_headers())
+        resp.raise_for_status()
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
+    except requests.exceptions.HTTPError:
+        if resp.status_code == 401:
+            print("Error: Invalid API secret. Check your BITHUMAN_API_SECRET.")
+        else:
+            print(f"Error: HTTP {resp.status_code} -- {resp.text[:200]}")
+        sys.exit(1)
+
     data = resp.json()
     print(f"API secret valid: {data.get('valid', False)}")
     return data
@@ -39,7 +52,21 @@ def validate():
 
 def get_agent(agent_id: str):
     """GET /v1/agent/{code} -- retrieve agent details."""
-    resp = requests.get(f"{BASE_URL}/v1/agent/{agent_id}", headers=get_headers())
+    try:
+        resp = requests.get(f"{BASE_URL}/v1/agent/{agent_id}", headers=get_headers())
+        resp.raise_for_status()
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
+    except requests.exceptions.HTTPError:
+        if resp.status_code == 404:
+            print(f"Error: Agent {agent_id} not found.")
+        elif resp.status_code == 401:
+            print("Error: Invalid API secret. Check your BITHUMAN_API_SECRET.")
+        else:
+            print(f"Error: HTTP {resp.status_code} -- {resp.text[:200]}")
+        sys.exit(1)
+
     data = resp.json()
 
     if not data.get("success"):

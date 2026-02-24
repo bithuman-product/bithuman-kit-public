@@ -34,11 +34,11 @@ async def entrypoint(ctx: JobContext):
 
     gpu_url = os.getenv("CUSTOM_GPU_URL", "http://expression-avatar:8089/launch")
     avatar_image = os.getenv("BITHUMAN_AVATAR_IMAGE", "").strip()
-    avatar_id = os.getenv("AVATAR_ID", "").strip()
+    avatar_id = os.getenv("BITHUMAN_AGENT_ID", "").strip()
 
     if not avatar_image and not avatar_id:
         raise ValueError(
-            "Set BITHUMAN_AVATAR_IMAGE (face photo) or AVATAR_ID in .env"
+            "Set BITHUMAN_AVATAR_IMAGE (face photo) or BITHUMAN_AGENT_ID in .env"
         )
 
     kwargs: dict = {
@@ -58,7 +58,7 @@ async def entrypoint(ctx: JobContext):
 
     session = AgentSession(
         llm=openai.realtime.RealtimeModel(
-            voice=os.getenv("OPENAI_VOICE", "alloy"),
+            voice=os.getenv("OPENAI_VOICE", "coral"),
             model="gpt-4o-mini-realtime-preview",
         ),
         vad=silero.VAD.load(),

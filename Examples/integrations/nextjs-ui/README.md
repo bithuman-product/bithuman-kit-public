@@ -37,7 +37,7 @@ A modern, responsive web interface for connecting to bitHuman's AI agents via Li
 1. **Clone the repository**
    ```bash
    git clone https://github.com/bithuman-product/examples.git
-   cd examples/integrations/nextjs-ui
+   cd integrations/nextjs-ui
    ```
 
 2. **Install dependencies**
@@ -73,7 +73,7 @@ A modern, responsive web interface for connecting to bitHuman's AI agents via Li
 
 ## 🛠️ Technology Stack
 
-- **[Next.js 14](https://nextjs.org/)** - React framework with App Router
+- **[Next.js 14](https://nextjs.org/)** - React framework with Pages Router
 - **[LiveKit](https://livekit.io/)** - Real-time audio/video infrastructure
 - **[React 18](https://react.dev/)** - UI framework with hooks
 - **[TypeScript](https://www.typescriptlang.org/)** - Type safety

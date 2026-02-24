@@ -18,15 +18,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_URL = "https://api.bithuman.ai"
+BASE_URL = os.getenv("BITHUMAN_API_URL", "https://api.bithuman.ai")
 
 
 def get_headers():
-    api_secret = os.environ.get("BITHUMAN_API_SECRET")
-    if not api_secret:
-        print("Error: Set BITHUMAN_API_SECRET environment variable")
+    secret = os.getenv("BITHUMAN_API_SECRET")
+    if not secret:
+        print("Error: BITHUMAN_API_SECRET not set.")
+        print("  Get yours at https://www.bithuman.ai/#developer")
+        print("  Then: export BITHUMAN_API_SECRET='your_secret'")
         sys.exit(1)
-    return {"Content-Type": "application/json", "api-secret": api_secret}
+    return {"Content-Type": "application/json", "api-secret": secret}
 
 
 def upload_from_url(file_url: str, file_type: str = "auto"):
@@ -35,7 +37,12 @@ def upload_from_url(file_url: str, file_type: str = "auto"):
     if file_type != "auto":
         body["file_type"] = file_type
 
-    resp = requests.post(f"{BASE_URL}/v1/files/upload", headers=get_headers(), json=body)
+    try:
+        resp = requests.post(f"{BASE_URL}/v1/files/upload", headers=get_headers(), json=body)
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
+
     data = resp.json()
 
     if data.get("success"):
@@ -61,7 +68,12 @@ def upload_from_file(file_path: str, file_type: str = "auto"):
     if file_type != "auto":
         body["file_type"] = file_type
 
-    resp = requests.post(f"{BASE_URL}/v1/files/upload", headers=get_headers(), json=body)
+    try:
+        resp = requests.post(f"{BASE_URL}/v1/files/upload", headers=get_headers(), json=body)
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
+
     data = resp.json()
 
     if data.get("success"):

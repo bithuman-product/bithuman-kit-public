@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """bitHuman Platform API -- Agent Generation
 
 Generate an AI avatar agent and optionally download its .imx model file.
@@ -30,23 +32,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_URL = "https://api.bithuman.ai"
+BASE_URL = os.getenv("BITHUMAN_API_URL", "https://api.bithuman.ai")
 
 # Spinner frames for status polling
 SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
 
 def get_headers():
-    api_secret = os.environ.get("BITHUMAN_API_SECRET")
-    if not api_secret:
-        print("Error: BITHUMAN_API_SECRET not set.\n")
-        print("  1. Go to https://www.bithuman.ai and sign in")
-        print("  2. Navigate to the Developer section")
-        print("  3. Copy your API secret")
-        print("  4. Run:  export BITHUMAN_API_SECRET=your_secret")
-        print("     Or:   add it to .env (see .env.example)")
+    secret = os.getenv("BITHUMAN_API_SECRET")
+    if not secret:
+        print("Error: BITHUMAN_API_SECRET not set.")
+        print("  Get yours at https://www.bithuman.ai/#developer")
+        print("  Then: export BITHUMAN_API_SECRET='your_secret'")
         sys.exit(1)
-    return {"Content-Type": "application/json", "api-secret": api_secret}
+    return {"Content-Type": "application/json", "api-secret": secret}
 
 
 def generate_agent(
@@ -113,7 +112,11 @@ def poll_status(agent_id: str, interval: int = 5, timeout: int = 600):
                 f"{BASE_URL}/v1/agent/status/{agent_id}",
                 headers=get_headers(),
             )
-            data = resp.json()["data"]
+            data = resp.json().get("data", {})
+            if not data:
+                print(f"\n  Warning: No data in status response, retrying...")
+                time.sleep(interval)
+                continue
         except Exception as e:
             print(f"\n  Warning: Status check failed ({e}), retrying...")
             time.sleep(interval)
@@ -165,6 +168,9 @@ def get_agent(agent_id: str):
     try:
         resp = requests.get(f"{BASE_URL}/v1/agent/{agent_id}", headers=get_headers())
         resp.raise_for_status()
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
     except requests.exceptions.HTTPError:
         if resp.status_code == 404:
             print(f"Error: Agent {agent_id} not found.")

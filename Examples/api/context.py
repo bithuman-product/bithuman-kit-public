@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """bitHuman Platform API -- Agent Context
 
 Make a live agent speak or inject background context into its conversation.
@@ -18,15 +20,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_URL = "https://api.bithuman.ai"
+BASE_URL = os.getenv("BITHUMAN_API_URL", "https://api.bithuman.ai")
 
 
 def get_headers():
-    api_secret = os.environ.get("BITHUMAN_API_SECRET")
-    if not api_secret:
-        print("Error: Set BITHUMAN_API_SECRET environment variable")
+    secret = os.getenv("BITHUMAN_API_SECRET")
+    if not secret:
+        print("Error: BITHUMAN_API_SECRET not set.")
+        print("  Get yours at https://www.bithuman.ai/#developer")
+        print("  Then: export BITHUMAN_API_SECRET='your_secret'")
         sys.exit(1)
-    return {"Content-Type": "application/json", "api-secret": api_secret}
+    return {"Content-Type": "application/json", "api-secret": secret}
 
 
 def speak(agent_id: str, message: str, room_id: str | None = None):
@@ -35,7 +39,12 @@ def speak(agent_id: str, message: str, room_id: str | None = None):
     if room_id:
         body["room_id"] = room_id
 
-    resp = requests.post(f"{BASE_URL}/v1/agent/{agent_id}/speak", headers=get_headers(), json=body)
+    try:
+        resp = requests.post(f"{BASE_URL}/v1/agent/{agent_id}/speak", headers=get_headers(), json=body)
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
+
     data = resp.json()
 
     if data.get("success"):
@@ -57,11 +66,16 @@ def add_context(agent_id: str, context: str, room_id: str | None = None):
     if room_id:
         body["room_id"] = room_id
 
-    resp = requests.post(
-        f"{BASE_URL}/v1/agent/{agent_id}/add-context",
-        headers=get_headers(),
-        json=body,
-    )
+    try:
+        resp = requests.post(
+            f"{BASE_URL}/v1/agent/{agent_id}/add-context",
+            headers=get_headers(),
+            json=body,
+        )
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
+        sys.exit(1)
+
     data = resp.json()
 
     if data.get("success"):
