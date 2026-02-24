@@ -24,6 +24,29 @@ export BITHUMAN_API_SECRET=your_secret
 python generation.py --prompt "You are a friendly assistant" --download --output ../essence-selfhosted/models/avatar.imx
 ```
 
+## Quick Start (Full Stack)
+
+```bash
+# 1. Clone and enter the directory
+git clone https://github.com/bithuman-product/examples.git
+cd examples/essence-selfhosted
+
+# 2. Place your .imx model(s)
+mkdir -p models
+cp /path/to/avatar.imx models/
+
+# 3. Create your .env file
+cp .env.example .env
+# Edit .env: set BITHUMAN_API_SECRET and OPENAI_API_KEY
+
+# 4. Start everything
+docker compose up
+```
+
+Open **http://localhost:4202** in your browser. Click to start talking.
+
+First frame takes ~20 seconds (model loading), then runs at real-time 25 FPS.
+
 ## Terminal Quickstart (no Docker)
 
 ```bash
@@ -55,30 +78,34 @@ python conversation.py --model models/avatar.imx
 
 Speak into your mic, hear the AI respond, watch the avatar lip-sync.
 
-## Full App with Docker
+## Architecture
 
-For a complete web application with frontend UI:
+The Docker Compose stack runs 4 services:
 
-```bash
-# 1. Place your .imx model(s) in ./models/
-mkdir -p models
-cp /path/to/avatar.imx models/
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env with your API secret and OpenAI key
-
-# 3. Start all services
-docker compose up
+```
+Browser ──WebRTC──> LiveKit ──dispatch──> Agent ──local SDK──> .imx model (CPU)
+                      |                     |
+                   port 17880          AI conversation
+                                       (OpenAI)
 ```
 
-Open [http://localhost:4202](http://localhost:4202) in your browser.
+| Service | Description | Port |
+|---------|-------------|------|
+| **livekit** | WebRTC media server | 17880 |
+| **agent** | AI conversation + local .imx rendering | (internal) |
+| **frontend** | Web UI | 4202 |
+| **redis** | LiveKit state | (internal) |
 
-The Docker stack runs 4 services:
-- **LiveKit**: WebRTC server (ports 17880-17881)
-- **Agent**: AI conversation handler with local .imx model
-- **Frontend**: Web interface (port 4202)
-- **Redis**: State management
+## Configuration
+
+All configuration is via `.env`. See `.env.example` for all options.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BITHUMAN_API_SECRET` | Yes | API secret from bithuman.ai |
+| `OPENAI_API_KEY` | Yes | For AI conversation |
+| `BITHUMAN_MODEL_PATH` | CLI only | Path to `.imx` file (for terminal scripts) |
+| `OPENAI_VOICE` | No | TTS voice, default `coral` |
 
 ## How It Works
 
@@ -86,6 +113,37 @@ The Docker stack runs 4 services:
 2. Audio is processed locally on your CPU -- no GPU needed
 3. The SDK produces video frames (BGR numpy arrays) and synchronized audio
 4. Only authentication requires an internet connection
+
+## Verify It Works
+
+```bash
+# Check all containers are running
+docker compose ps
+
+# Check agent logs for errors
+docker compose logs agent
+
+# Check frontend is accessible
+curl -s http://localhost:4202 | head -5
+```
+
+## Troubleshooting
+
+**No .imx model files?**
+Place at least one `.imx` file in the `./models/` directory. Download from [www.bithuman.ai](https://www.bithuman.ai) > Community, or generate via `../api/generation.py`.
+
+**Model path wrong?**
+The Docker stack mounts `./models/` to `/imx-models` inside the container. The agent auto-discovers `.imx` files in that directory.
+
+**Slow first start?**
+First frame takes ~20 seconds while the model loads. Subsequent sessions in the same container start instantly.
+
+**Agent crashes?**
+```bash
+docker compose logs agent
+```
+- Check that `OPENAI_API_KEY` is set in `.env`
+- Check that `.imx` files are in `./models/`
 
 ## Files
 

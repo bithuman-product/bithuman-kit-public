@@ -12,7 +12,8 @@ services:
     networks:
       - bh-network
     depends_on:
-      - redis
+      redis:
+        condition: service_started
 
   agent:
     build:
@@ -22,18 +23,19 @@ services:
     restart: always
     environment:
       - LIVEKIT_URL=ws://livekit:17880
+      # Dev-only credentials (matches livekit.yaml). Replace for production.
       - LIVEKIT_API_KEY=devkey
       - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
     env_file:
-      - ./.env
+      - path: ./.env
+        required: false
     volumes:
       - ./agent.py:/app/agent.py
     networks:
       - bh-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
-      - livekit
+      livekit:
+        condition: service_started
 
   frontend:
     build:
@@ -45,13 +47,15 @@ services:
     ports:
       - "4202:4202"
     environment:
+      # Dev-only credentials (matches livekit.yaml). Replace for production.
       - LIVEKIT_API_KEY=devkey
       - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
       - PORT=4202
     networks:
       - bh-network
     depends_on:
-      - livekit
+      livekit:
+        condition: service_started
 
   redis:
     image: redis:alpine
