@@ -60,6 +60,7 @@ from livekit.agents import (
     Agent,
     AgentSession,
     JobContext,
+    RoomOutputOptions,
     WorkerOptions,
     cli,
     llm,
@@ -95,10 +96,12 @@ async def entrypoint(ctx: JobContext):
     )
 
     # Start — avatar joins room and begins animating
+    await avatar.start(session, room=ctx.room)
+
     await session.start(
         agent=MyAgent(),
         room=ctx.room,
-        room_output=avatar,
+        room_output_options=RoomOutputOptions(audio_enabled=False),
     )
 
 if __name__ == "__main__":
@@ -288,7 +291,7 @@ Visit [www.bithuman.ai](https://www.bithuman.ai/#api) for current pricing.
 | Avatar doesn't appear | Check agent_id exists in your dashboard |
 | Network timeouts | Ensure stable internet; the plugin retries automatically |
 | Plugin installation fails | Use `uv` with `GIT_LFS_SKIP_SMUDGE=1` flag |
-| No lip movement | Ensure `room_output=avatar` is set in `session.start()` |
+| No lip movement | Ensure `avatar.start(session, room=ctx.room)` is called before `session.start()` |
 
 ---
 

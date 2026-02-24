@@ -54,6 +54,7 @@ from livekit.agents import (
     Agent,
     AgentSession,
     JobContext,
+    RoomOutputOptions,
     WorkerOptions,
     cli,
     llm,
@@ -90,10 +91,12 @@ async def entrypoint(ctx: JobContext):
     )
 
     # Start everything — avatar joins the room automatically
+    await avatar.start(session, room=ctx.room)
+
     await session.start(
         agent=MyAgent(),
         room=ctx.room,
-        room_output=avatar,               # Avatar renders the agent's speech
+        room_output_options=RoomOutputOptions(audio_enabled=False),
     )
 
 # 3. Launch
@@ -125,7 +128,7 @@ Then open [agents-playground.livekit.io](https://agents-playground.livekit.io) t
 
 ### How It Works Behind the Scenes
 
-When `session.start()` runs with `room_output=avatar`:
+When `avatar.start()` and `session.start()` run:
 
 1. The plugin sends a request to bitHuman's cloud API
 2. A cloud avatar worker receives the request
@@ -165,6 +168,7 @@ from livekit.agents import (
     Agent,
     AgentSession,
     JobContext,
+    RoomOutputOptions,
     WorkerOptions,
     cli,
     llm,
@@ -194,10 +198,12 @@ async def entrypoint(ctx: JobContext):
         vad=silero.VAD.load(),
     )
 
+    await avatar.start(session, room=ctx.room)
+
     await session.start(
         agent=MyAgent(),
         room=ctx.room,
-        room_output=avatar,
+        room_output_options=RoomOutputOptions(audio_enabled=False),
     )
 
 if __name__ == "__main__":
@@ -250,6 +256,7 @@ from livekit.agents import (
     Agent,
     AgentSession,
     JobContext,
+    RoomOutputOptions,
     WorkerOptions,
     cli,
     llm,
@@ -268,8 +275,8 @@ async def entrypoint(ctx: JobContext):
 
     # Create the avatar session (self-hosted GPU container)
     avatar = bithuman.AvatarSession(
-        api_url=os.getenv("GPU_WORKER_URL"),            # e.g. "http://localhost:8089"
-        api_token=os.getenv("BITHUMAN_API_SECRET"),
+        api_url=os.getenv("CUSTOM_GPU_URL", "http://localhost:8089/launch"),
+        api_secret=os.getenv("BITHUMAN_API_SECRET"),
         avatar_image="https://example.com/face.jpg",    # Any face image URL
     )
 
@@ -280,10 +287,12 @@ async def entrypoint(ctx: JobContext):
         vad=silero.VAD.load(),
     )
 
+    await avatar.start(session, room=ctx.room)
+
     await session.start(
         agent=MyAgent(),
         room=ctx.room,
-        room_output=avatar,
+        room_output_options=RoomOutputOptions(audio_enabled=False),
     )
 
 if __name__ == "__main__":
@@ -305,7 +314,7 @@ docker run --gpus all -p 8089:8089 \
 ```bash
 # Required
 export BITHUMAN_API_SECRET="your_api_secret"
-export GPU_WORKER_URL="http://localhost:8089"
+export CUSTOM_GPU_URL="http://localhost:8089/launch"
 export OPENAI_API_KEY="sk-..."
 
 # LiveKit connection
@@ -538,7 +547,7 @@ Open [http://localhost:4202](http://localhost:4202) to talk to your avatar.
   <Accordion title="Avatar appears but no lip movement">
     The avatar needs audio input to animate. Ensure:
     1. Your TTS is producing audio (test with `openai.TTS()` separately)
-    2. The `room_output=avatar` parameter is set in `session.start()`
+    2. Ensure `avatar.start(session, room=ctx.room)` is called before `session.start()`
     3. Check agent logs for audio pipeline errors
   </Accordion>
 
