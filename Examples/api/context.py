@@ -45,18 +45,19 @@ def speak(agent_id: str, message: str, room_id: str | None = None):
         print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
         sys.exit(1)
 
-    data = resp.json()
-
-    if data.get("success"):
-        rooms = data.get("data", {}).get("delivered_to_rooms", 0)
-        print(f"Speech delivered to {rooms} room(s)")
-    else:
-        error = data.get("error", "")
-        if error == "NO_ACTIVE_ROOMS":
+    if resp.status_code != 200:
+        data = resp.json()
+        error = data.get("error", {})
+        if isinstance(error, dict) and error.get("code") == "NOT_FOUND":
             print("No active rooms -- the agent must be in a live session first.")
         else:
-            print(f"Error: {data.get('message', 'Unknown error')}")
+            msg = error.get("message", resp.text[:200]) if isinstance(error, dict) else str(error)
+            print(f"Error: {msg}")
+        return data
 
+    data = resp.json()
+    rooms = data.get("delivered_to_rooms", 0)
+    print(f"Speech delivered to {rooms} room(s)")
     return data
 
 
@@ -76,14 +77,16 @@ def add_context(agent_id: str, context: str, room_id: str | None = None):
         print(f"Error: Cannot reach {BASE_URL}. Check your internet connection.")
         sys.exit(1)
 
+    if resp.status_code != 200:
+        data = resp.json()
+        error = data.get("error", {})
+        msg = error.get("message", resp.text[:200]) if isinstance(error, dict) else str(error)
+        print(f"Error: {msg}")
+        return data
+
     data = resp.json()
-
-    if data.get("success"):
-        rooms = data.get("data", {}).get("delivered_to_rooms", 0)
-        print(f"Context added to {rooms} room(s)")
-    else:
-        print(f"Error: {data.get('message', 'Unknown error')}")
-
+    rooms = data.get("delivered_to_rooms", 0)
+    print(f"Context added to {rooms} room(s)")
     return data
 
 

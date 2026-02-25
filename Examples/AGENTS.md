@@ -72,12 +72,15 @@ pip install livekit-plugins-bithuman     # LiveKit plugin — real-time WebRTC s
 ```bash
 docker run --gpus all -p 8089:8089 \
     -e BITHUMAN_API_SECRET=your_secret \
-    -v bithuman-models:/data/models \
+    -v bithuman-models:/data/models:rw \
     sgubithuman/expression-avatar:latest
 ```
 
+The `-v bithuman-models:/data/models` volume mount is **required** — it caches ~5 GB of
+model weights. Without it, weights re-download on every container restart.
+
 GPU container HTTP API: `/health`, `/ready`, `/launch` (POST, multipart form),
-`/tasks`, `/tasks/{id}/stop`, `/test-frame`, `/benchmark`.
+`/tasks`, `/tasks/{id}/stop`, `/test-frame`, `/benchmark` (POST).
 
 ## Python SDK Core API
 
