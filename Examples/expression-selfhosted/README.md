@@ -45,7 +45,7 @@ docker compose up
 Open **http://localhost:4202** in your browser. Click to start talking.
 
 First run takes 2-5 minutes (downloads ~5 GB model weights + GPU compilation).
-Subsequent starts take ~50 seconds.
+Subsequent starts take ~80 seconds.
 
 ## Quick Start (GPU Container Only)
 
@@ -58,12 +58,23 @@ docker run --gpus all -p 8089:8089 \
     sgubithuman/expression-avatar:latest
 ```
 
-Then in another terminal:
+Verify it works (once you see `Avatar Worker Ready` in the logs):
 
 ```bash
+curl http://localhost:8089/health
+curl http://localhost:8089/test-frame -o test.jpg   # check the output image
+curl -X POST http://localhost:8089/benchmark         # check FPS
+```
+
+To run the interactive quickstart (requires a desktop with display + audio):
+
+```bash
+# From the cloned repo directory (expression-selfhosted/)
 pip install -r requirements.txt
 python quickstart.py --avatar-image face.jpg --audio-file speech.wav   # speech.wav included
 ```
+
+> **Note:** `quickstart.py` opens an OpenCV window and plays audio. For headless/SSH servers, use the Full Stack path above (browser at localhost:4202) or the curl endpoints.
 
 ## Verify the GPU Container
 
