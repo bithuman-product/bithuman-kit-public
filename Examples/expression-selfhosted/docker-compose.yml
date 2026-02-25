@@ -21,6 +21,9 @@ services:
   expression-avatar:
     image: docker.io/sgubithuman/expression-avatar:latest
     restart: always
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     deploy:
       resources:
         reservations:
