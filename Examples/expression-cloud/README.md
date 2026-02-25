@@ -44,12 +44,14 @@ cp .env.example .env
 
 ### Animate any face from an image
 
+A sample `speech.wav` is included in this directory. Or use your own:
+
 ```bash
 # Using a local image
 python quickstart.py --avatar-image face.jpg --audio-file speech.wav
 
 # Using a URL
-python quickstart.py --avatar-image https://thispersondoesnotexist.com --audio-file speech.wav
+python quickstart.py --avatar-image https://tmoobjxlwcwvxvjeppzq.supabase.co/storage/v1/object/public/bithuman/A74NWD9723/image_20251122_000244_372799.jpg --audio-file speech.wav
 ```
 
 Press `Q` to quit.
@@ -145,3 +147,4 @@ lsof -i :4202
 |------|-------------|
 | `quickstart.py` | Animate any face image with audio (terminal) |
 | `agent.py` | LiveKit agent for Docker-based web app |
+| `speech.wav` | Sample audio file for quickstart (13s, 16kHz) |

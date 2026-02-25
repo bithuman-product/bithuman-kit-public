@@ -57,6 +57,8 @@ cp .env.example .env
 
 ### Play an audio file through the avatar
 
+A sample `speech.wav` is included in this directory. Or use your own:
+
 ```bash
 python quickstart.py --model models/avatar.imx --audio-file speech.wav
 ```
@@ -153,3 +155,4 @@ docker compose logs agent
 | `microphone.py` | Real-time mic input with silence detection |
 | `conversation.py` | Full AI voice chat (OpenAI Realtime, no LiveKit) |
 | `agent.py` | LiveKit agent for the Docker-based web app |
+| `speech.wav` | Sample audio file for quickstart (13s, 16kHz) |

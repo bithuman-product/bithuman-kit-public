@@ -39,6 +39,8 @@ cp .env.example .env
 
 ### Play an audio file through the avatar
 
+A sample `speech.wav` is included in this directory. Or use your own:
+
 ```bash
 python quickstart.py --avatar-id YOUR_AGENT_ID --audio-file speech.wav
 ```
@@ -126,3 +128,4 @@ Check that `OPENAI_API_KEY` is set and valid in `.env`.
 |------|-------------|
 | `quickstart.py` | Play audio through cloud avatar (terminal) |
 | `agent.py` | LiveKit agent for Docker-based web app |
+| `speech.wav` | Sample audio file for quickstart (13s, 16kHz) |

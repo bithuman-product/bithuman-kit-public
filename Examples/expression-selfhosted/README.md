@@ -60,7 +60,7 @@ Then in another terminal:
 
 ```bash
 pip install -r requirements.txt
-python quickstart.py --avatar-image face.jpg --audio-file speech.wav
+python quickstart.py --avatar-image face.jpg --audio-file speech.wav   # speech.wav included
 ```
 
 ## Verify the GPU Container
