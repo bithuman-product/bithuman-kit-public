@@ -19,14 +19,11 @@ bitHuman creates digital avatars that lip-sync to audio in real-time. Feed in au
 
 ```bash Docker (Recommended)
 git clone https://github.com/bithuman-product/examples.git
-cd examples/essence-selfhosted
+cd examples/essence-cloud
 
 # Add your API keys to .env
 cp .env.example .env
-# Edit .env: set BITHUMAN_API_SECRET and OPENAI_API_KEY
-
-# Add your .imx model to models/
-mkdir -p models && cp ~/Downloads/avatar.imx models/
+# Edit .env: set BITHUMAN_API_SECRET, BITHUMAN_AGENT_ID, and OPENAI_API_KEY
 
 docker compose up
 # Open http://localhost:4202

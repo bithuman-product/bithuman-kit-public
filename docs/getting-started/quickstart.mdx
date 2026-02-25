@@ -32,6 +32,7 @@ pip install bithuman --upgrade
 
 ```python
 import asyncio
+import cv2
 from bithuman import AsyncBithuman
 from bithuman.audio import load_audio, float32_to_int16
 
@@ -53,7 +54,8 @@ async def main():
     # Display animated frames
     async for frame in runtime.run():
         if frame.has_image:
-            show(frame.bgr_image)  # numpy (H, W, 3)
+            cv2.imshow("Avatar", frame.bgr_image)  # numpy (H, W, 3)
+            cv2.waitKey(1)
 
 asyncio.run(main())
 ```

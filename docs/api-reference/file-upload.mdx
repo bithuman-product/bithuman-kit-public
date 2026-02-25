@@ -30,7 +30,7 @@ Download a file from a URL.
 ```json
 {
   "file_url": "https://example.com/document.pdf",
-  "file_type": "pdf"
+  "file_type": "auto"
 }
 ```
 
@@ -50,7 +50,7 @@ response = requests.post(
     },
     json={
         "file_url": "https://example.com/presentation.pdf",
-        "file_type": "pdf"
+        "file_type": "auto"
     }
 )
 print(response.json())
@@ -64,7 +64,7 @@ Upload base64-encoded file data directly.
 {
   "file_data": "JVBERi0xLjQKJcOkw7zDtsO...",
   "file_name": "document.pdf",
-  "file_type": "pdf"
+  "file_type": "auto"
 }
 ```
 
@@ -90,7 +90,7 @@ response = requests.post(
     json={
         "file_data": file_data,
         "file_name": "document.pdf",
-        "file_type": "pdf"
+        "file_type": "auto"
     }
 )
 print(response.json())
@@ -107,7 +107,7 @@ print(response.json())
   "data": {
     "file_url": "https://storage.supabase.co/assets/docs/20250115_103000_abc12345.pdf",
     "original_source": "https://example.com/document.pdf",
-    "file_type": "pdf",
+    "file_type": "auto",
     "file_size": 1024000,
     "mime_type": "application/pdf",
     "asset_category": "docs",
@@ -117,6 +117,17 @@ print(response.json())
 ```
 
 ---
+
+## Size Limits
+
+| Category | Max Size |
+|----------|----------|
+| **Images** | 10 MB |
+| **Videos** | 100 MB |
+| **Audio** | 50 MB |
+| **Documents** | 10 MB |
+
+Exceeding these limits returns HTTP `413`.
 
 ## Upload Methods Comparison
 

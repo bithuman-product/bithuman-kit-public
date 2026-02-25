@@ -31,14 +31,11 @@ bitHuman creates digital avatars that lip-sync to audio in real-time. Feed in au
 
 ```bash Docker (Recommended)
 git clone https://github.com/bithuman-product/examples.git
-cd examples/essence-selfhosted
+cd examples/essence-cloud
 
 # Add your API keys to .env
 cp .env.example .env
-# Edit .env: set BITHUMAN_API_SECRET and OPENAI_API_KEY
-
-# Add your .imx model to models/
-mkdir -p models && cp ~/Downloads/avatar.imx models/
+# Edit .env: set BITHUMAN_API_SECRET, BITHUMAN_AGENT_ID, and OPENAI_API_KEY
 
 docker compose up
 # Open http://localhost:4202
@@ -179,6 +176,7 @@ pip install bithuman --upgrade
 
 ```python
 import asyncio
+import cv2
 from bithuman import AsyncBithuman
 from bithuman.audio import load_audio, float32_to_int16
 
@@ -200,7 +198,8 @@ async def main():
     # Display animated frames
     async for frame in runtime.run():
         if frame.has_image:
-            show(frame.bgr_image)  # numpy (H, W, 3)
+            cv2.imshow("Avatar", frame.bgr_image)  # numpy (H, W, 3)
+            cv2.waitKey(1)
 
 asyncio.run(main())
 ```
@@ -2090,9 +2089,9 @@ expression-avatar container
 
 - NVIDIA GPU with **≥8 GB VRAM** (RTX 3080 or better)
 - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed
-- Docker 20.10+ or Docker Compose v2
+- Docker 24+ with Compose v2
 - bitHuman API secret from the [bitHuman Console](https://www.bithuman.ai)
-- Model weights package from bitHuman (see below)
+- Model weights download automatically on first start (~5 GB, cached in Docker volume)
 - A running [LiveKit server](https://docs.livekit.io/home/self-hosting/local/) (or LiveKit Cloud)
 
 ---
@@ -3807,11 +3806,8 @@ Update the system prompt of an existing agent without regenerating it.
 
 ```json
 {
-  "success": true,
-  "data": {
-    "agent_code": "A91XMB7113",
-    "updated": true
-  }
+  "agent_code": "A91XMB7113",
+  "updated": true
 }
 ```
 
@@ -4064,7 +4060,7 @@ Download a file from a URL.
 ```json
 {
   "file_url": "https://example.com/document.pdf",
-  "file_type": "pdf"
+  "file_type": "auto"
 }
 ```
 
@@ -4084,7 +4080,7 @@ response = requests.post(
     },
     json={
         "file_url": "https://example.com/presentation.pdf",
-        "file_type": "pdf"
+        "file_type": "auto"
     }
 )
 print(response.json())
@@ -4098,7 +4094,7 @@ Upload base64-encoded file data directly.
 {
   "file_data": "JVBERi0xLjQKJcOkw7zDtsO...",
   "file_name": "document.pdf",
-  "file_type": "pdf"
+  "file_type": "auto"
 }
 ```
 
@@ -4124,7 +4120,7 @@ response = requests.post(
     json={
         "file_data": file_data,
         "file_name": "document.pdf",
-        "file_type": "pdf"
+        "file_type": "auto"
     }
 )
 print(response.json())
@@ -4141,7 +4137,7 @@ print(response.json())
   "data": {
     "file_url": "https://storage.supabase.co/assets/docs/20250115_103000_abc12345.pdf",
     "original_source": "https://example.com/document.pdf",
-    "file_type": "pdf",
+    "file_type": "auto",
     "file_size": 1024000,
     "mime_type": "application/pdf",
     "asset_category": "docs",
@@ -4151,6 +4147,17 @@ print(response.json())
 ```
 
 ---
+
+## Size Limits
+
+| Category | Max Size |
+|----------|----------|
+| **Images** | 10 MB |
+| **Videos** | 100 MB |
+| **Audio** | 50 MB |
+| **Documents** | 10 MB |
+
+Exceeding these limits returns HTTP `413`.
 
 ## Upload Methods Comparison
 
