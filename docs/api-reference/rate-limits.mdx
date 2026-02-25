@@ -20,7 +20,7 @@ Check your current tier and usage at [www.bithuman.ai](https://www.bithuman.ai) 
 
 ## Handling Errors
 
-If you exceed limits, the API returns HTTP `429 Too Many Requests` or `503 Service Unavailable`:
+If you exceed limits or run out of credits, the API returns an error:
 
 ```json
 {
@@ -33,6 +33,8 @@ If you exceed limits, the API returns HTTP `429 Too Many Requests` or `503 Servi
   "status_code": 402
 }
 ```
+
+Common status codes: `402` (no credits), `429` (rate limited), `503` (workers busy).
 
 ### Recommended Retry Strategy
 

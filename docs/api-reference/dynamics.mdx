@@ -14,12 +14,12 @@ Generate dynamic movements and animations for an agent. Returns immediately with
 
 **Request Body**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `agent_id` | string | Yes | Agent ID to generate dynamics for |
-| `image_url` | string | No | Agent image URL (fetched from agent data if not provided) |
-| `duration` | number | No | Duration of each motion in seconds |
-| `model` | string | No | Model to use (`seedance`, `kling`, `auto`) |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `agent_id` | string | Yes | — | Agent ID to generate dynamics for |
+| `image_url` | string | No | (from agent) | Agent image URL (fetched from agent data if not provided) |
+| `duration` | number | No | `5` | Duration of each motion in seconds |
+| `model` | string | No | `seedance` | Model to use (`seedance`, `kling`) |
 
 **Response**
 

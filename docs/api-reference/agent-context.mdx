@@ -29,13 +29,9 @@ Triggers the agent to speak a message to users in the session.
 
 ```json
 {
-  "success": true,
-  "message": "Speech triggered successfully",
-  "data": {
-    "agent_code": "A12345678",
-    "delivered_to_rooms": 1,
-    "timestamp": "2024-01-15T10:30:00Z"
-  }
+  "agent_code": "A12345678",
+  "context_type": "speak",
+  "delivered_to_rooms": 1
 }
 ```
 
@@ -80,14 +76,9 @@ Adds background knowledge the agent will use to inform future responses. Can als
 
 ```json
 {
-  "success": true,
-  "message": "Context added successfully",
-  "data": {
-    "agent_code": "A12345678",
-    "context_type": "add_context",
-    "delivered_to_rooms": 1,
-    "timestamp": "2024-01-15T10:35:00Z"
-  }
+  "agent_code": "A12345678",
+  "context_type": "add_context",
+  "delivered_to_rooms": 1
 }
 ```
 

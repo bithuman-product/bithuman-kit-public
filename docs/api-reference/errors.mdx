@@ -44,7 +44,7 @@ All error responses follow a consistent format:
 | `UNAUTHORIZED` | 401 | Invalid API secret | Check your `api-secret` header value. Get a valid secret from [Developer Dashboard](https://www.bithuman.ai/#developer). |
 | `MISSING_AUTH` | 401 | Missing api-secret header | Add `api-secret` header to your request. |
 | `ACCOUNT_SUSPENDED` | 401 | Account suspended | Contact support via [Discord](https://discord.gg/ES953n7bPA). |
-| `INSUFFICIENT_CREDITS` | 402 | Insufficient credits | Top up credits at [www.bithuman.ai](https://www.bithuman.ai). |
+| `INSUFFICIENT_BALANCE` | 402 | Insufficient credits | Top up credits at [www.bithuman.ai](https://www.bithuman.ai). |
 
 ### Agent Operations
 
@@ -92,15 +92,14 @@ resp = requests.post(
 )
 
 if resp.status_code == 200:
-    data = resp.json()["data"]
-    print(f"Agent {data['agent_id']} is generating...")
+    result = resp.json()
+    print(f"Agent {result['agent_id']} is generating...")
 
 elif resp.status_code == 401:
     print("Invalid API secret. Check BITHUMAN_API_SECRET.")
 
 elif resp.status_code == 429:
-    retry_after = resp.json()["error"].get("retry_after", 5)
-    print(f"Rate limited. Retry after {retry_after}s.")
+    print("Rate limited. Wait a moment and retry.")
 
 elif resp.status_code == 503:
     print("Workers busy. Retry in a few seconds.")

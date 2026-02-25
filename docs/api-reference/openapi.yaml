@@ -61,11 +61,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [prompt]
               properties:
                 prompt:
                   type: string
-                  description: System prompt / personality for the agent.
+                  description: System prompt / personality for the agent. If omitted, a random default is used.
                   example: "You are a friendly fitness coach who motivates users."
                 image:
                   type: string
@@ -81,12 +80,20 @@ paths:
                   example: "https://example.com/voice.wav"
                 aspect_ratio:
                   type: string
-                  enum: ["9:16", "16:9", "1:1"]
-                  default: "9:16"
-                  description: Output video aspect ratio.
+                  enum: ["16:9", "9:16", "1:1"]
+                  default: "16:9"
+                  description: Aspect ratio for image generation.
+                video_aspect_ratio:
+                  type: string
+                  enum: ["16:9", "9:16", "1:1"]
+                  default: "16:9"
+                  description: Aspect ratio for video generation.
+                agent_id:
+                  type: string
+                  description: Custom agent identifier. Auto-generated if omitted.
                 duration:
                   type: integer
-                  default: 8
+                  default: 10
                   description: Source video duration in seconds.
       responses:
         "200":
@@ -700,10 +707,10 @@ components:
           example:
             error:
               code: "VALIDATION_ERROR"
-              message: "prompt is required"
-              httpStatus: 400
+              message: "Invalid request parameters"
+              httpStatus: 422
             status: "error"
-            status_code: 400
+            status_code: 422
 
 tags:
   - name: Authentication

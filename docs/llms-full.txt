@@ -3485,20 +3485,31 @@ All errors follow the same structure:
 
 ```json
 {
-  "success": false,
-  "error": "ERROR_CODE",
-  "message": "Human-readable error description"
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable error description",
+    "httpStatus": 401
+  },
+  "status": "error",
+  "status_code": 401
 }
 ```
+
+See the [Error Reference](/api-reference/errors) for all error codes.
 
 | HTTP Status | Meaning |
 |-------------|---------|
 | `200` | Success |
 | `400` | Invalid request parameters |
 | `401` | Invalid or missing `api-secret` |
+| `402` | Insufficient credits |
 | `404` | Resource not found |
+| `413` | Payload too large |
+| `415` | Unsupported media type |
+| `422` | Validation error |
 | `429` | Rate limit exceeded |
 | `500` | Internal server error |
+| `503` | Service unavailable (workers busy) |
 
 
 ## Agent Generation API: Create Avatar Agents
@@ -3925,13 +3936,9 @@ Triggers the agent to speak a message to users in the session.
 
 ```json
 {
-  "success": true,
-  "message": "Speech triggered successfully",
-  "data": {
-    "agent_code": "A12345678",
-    "delivered_to_rooms": 1,
-    "timestamp": "2024-01-15T10:30:00Z"
-  }
+  "agent_code": "A12345678",
+  "context_type": "speak",
+  "delivered_to_rooms": 1
 }
 ```
 
@@ -3976,14 +3983,9 @@ Adds background knowledge the agent will use to inform future responses. Can als
 
 ```json
 {
-  "success": true,
-  "message": "Context added successfully",
-  "data": {
-    "agent_code": "A12345678",
-    "context_type": "add_context",
-    "delivered_to_rooms": 1,
-    "timestamp": "2024-01-15T10:35:00Z"
-  }
+  "agent_code": "A12345678",
+  "context_type": "add_context",
+  "delivered_to_rooms": 1
 }
 ```
 
@@ -4221,12 +4223,12 @@ Generate dynamic movements and animations for an agent. Returns immediately with
 
 **Request Body**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `agent_id` | string | Yes | Agent ID to generate dynamics for |
-| `image_url` | string | No | Agent image URL (fetched from agent data if not provided) |
-| `duration` | number | No | Duration of each motion in seconds |
-| `model` | string | No | Model to use (`seedance`, `kling`, `auto`) |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `agent_id` | string | Yes | — | Agent ID to generate dynamics for |
+| `image_url` | string | No | (from agent) | Agent image URL (fetched from agent data if not provided) |
+| `duration` | number | No | `5` | Duration of each motion in seconds |
+| `model` | string | No | `seedance` | Model to use (`seedance`, `kling`) |
 
 **Response**
 
@@ -4460,7 +4462,7 @@ Check your current tier and usage at [www.bithuman.ai](https://www.bithuman.ai) 
 
 ## Handling Errors
 
-If you exceed limits, the API returns HTTP `429 Too Many Requests` or `503 Service Unavailable`:
+If you exceed limits or run out of credits, the API returns an error:
 
 ```json
 {
@@ -4473,6 +4475,8 @@ If you exceed limits, the API returns HTTP `429 Too Many Requests` or `503 Servi
   "status_code": 402
 }
 ```
+
+Common status codes: `402` (no credits), `429` (rate limited), `503` (workers busy).
 
 ### Recommended Retry Strategy
 
@@ -4586,7 +4590,7 @@ All error responses follow a consistent format:
 | `UNAUTHORIZED` | 401 | Invalid API secret | Check your `api-secret` header value. Get a valid secret from [Developer Dashboard](https://www.bithuman.ai/#developer). |
 | `MISSING_AUTH` | 401 | Missing api-secret header | Add `api-secret` header to your request. |
 | `ACCOUNT_SUSPENDED` | 401 | Account suspended | Contact support via [Discord](https://discord.gg/ES953n7bPA). |
-| `INSUFFICIENT_CREDITS` | 402 | Insufficient credits | Top up credits at [www.bithuman.ai](https://www.bithuman.ai). |
+| `INSUFFICIENT_BALANCE` | 402 | Insufficient credits | Top up credits at [www.bithuman.ai](https://www.bithuman.ai). |
 
 ### Agent Operations
 
@@ -4634,15 +4638,14 @@ resp = requests.post(
 )
 
 if resp.status_code == 200:
-    data = resp.json()["data"]
-    print(f"Agent {data['agent_id']} is generating...")
+    result = resp.json()
+    print(f"Agent {result['agent_id']} is generating...")
 
 elif resp.status_code == 401:
     print("Invalid API secret. Check BITHUMAN_API_SECRET.")
 
 elif resp.status_code == 429:
-    retry_after = resp.json()["error"].get("retry_after", 5)
-    print(f"Rate limited. Retry after {retry_after}s.")
+    print("Rate limited. Wait a moment and retry.")
 
 elif resp.status_code == 503:
     print("Workers busy. Retry in a few seconds.")
