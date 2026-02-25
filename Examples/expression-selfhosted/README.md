@@ -180,6 +180,7 @@ GPU_PORT=9089            # Expression avatar (default: 8089)
 | `agent.py` | LiveKit agent connecting to local GPU container |
 | `.env.example` | Environment variable template |
 | `livekit.yaml` | LiveKit server configuration |
+| `speech.wav` | Sample audio file for quickstart (13s, 16kHz) |
 
 ## API Reference
 

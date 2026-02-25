@@ -62,7 +62,7 @@ def get_dynamics(agent_id: str):
     return data
 
 
-def generate_dynamics(agent_id: str, duration: int = 3, model: str = "seedance"):
+def generate_dynamics(agent_id: str, duration: int = 5, model: str = "seedance"):
     """POST /v1/dynamics/generate -- start dynamics generation."""
     try:
         resp = requests.post(
