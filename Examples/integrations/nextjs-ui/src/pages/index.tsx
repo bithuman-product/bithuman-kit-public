@@ -66,9 +66,8 @@ export function HomeInner() {
     if (isClient && !shouldConnect) {
       // Start connecting immediately when component is ready
       const timer = setTimeout(() => {
-        const connectionMode = process.env.NEXT_PUBLIC_LIVEKIT_URL ? "env" : mode;
-        console.log('Auto-connecting with mode:', connectionMode);
-        connect(connectionMode);
+        console.log('Auto-connecting with mode: env');
+        connect("env");
       }, 100); // Minimal delay for component readiness
       
       return () => clearTimeout(timer);
@@ -132,8 +131,7 @@ export function HomeInner() {
             <Playground
               autoConnect={false}
               onConnect={(c) => {
-                const m = process.env.NEXT_PUBLIC_LIVEKIT_URL ? "env" : mode;
-                handleConnect(c, m);
+                handleConnect(c, "env");
               }}
             />
             <ConnectionStatusIndicator />
