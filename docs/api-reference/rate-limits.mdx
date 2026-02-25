@@ -6,46 +6,31 @@ icon: "gauge-high"
 
 ## Request Limits
 
-All API endpoints are rate-limited to protect service quality. Limits are applied per API secret.
+API endpoints are rate-limited to protect service quality. Limits are applied per API secret.
 
-| Tier | Requests/min | Concurrent Sessions | Agent Generations/day |
-|------|-------------|---------------------|----------------------|
-| **Free** | 60 | 2 | 5 |
-| **Pro** | 300 | 10 | 50 |
-| **Enterprise** | Custom | Custom | Custom |
+| Tier | Concurrent Sessions | Agent Generations/day |
+|------|---------------------|----------------------|
+| **Free** | 2 | 5 |
+| **Pro** | 10 | 50 |
+| **Enterprise** | Custom | Custom |
 
 <Info>
 Check your current tier and usage at [www.bithuman.ai](https://www.bithuman.ai) > Developer section.
 </Info>
 
-## Rate Limit Headers
+## Handling Errors
 
-Every API response includes rate limit headers:
-
-```
-X-RateLimit-Limit: 300
-X-RateLimit-Remaining: 297
-X-RateLimit-Reset: 1705312260
-```
-
-| Header | Description |
-|--------|-------------|
-| `X-RateLimit-Limit` | Maximum requests per window |
-| `X-RateLimit-Remaining` | Remaining requests in current window |
-| `X-RateLimit-Reset` | Unix timestamp when the window resets |
-
-## Handling 429 Responses
-
-When you exceed the rate limit, the API returns HTTP `429 Too Many Requests`:
+If you exceed limits, the API returns HTTP `429 Too Many Requests` or `503 Service Unavailable`:
 
 ```json
 {
-  "success": false,
   "error": {
-    "code": "RATE_LIMITED",
-    "message": "Rate limit exceeded. Retry after 12 seconds.",
-    "retry_after": 12
-  }
+    "code": "INSUFFICIENT_BALANCE",
+    "message": "Insufficient credits",
+    "httpStatus": 402
+  },
+  "status": "error",
+  "status_code": 402
 }
 ```
 
@@ -62,13 +47,12 @@ def api_request_with_retry(url, headers, max_retries=3):
     for attempt in range(max_retries):
         resp = requests.post(url, headers=headers)
 
-        if resp.status_code != 429:
+        if resp.status_code not in (429, 503):
             return resp
 
         # Exponential backoff with jitter
-        retry_after = resp.json().get("error", {}).get("retry_after", 2 ** attempt)
-        jitter = random.uniform(0, 1)
-        time.sleep(retry_after + jitter)
+        wait = (2 ** attempt) + random.uniform(0, 1)
+        time.sleep(wait)
 
     return resp  # Return last response if all retries exhausted
 ```
@@ -82,18 +66,17 @@ Avatar sessions have per-account concurrency limits:
 | **Cloud avatar sessions** | Based on tier | Active WebRTC sessions |
 | **Agent generation** | 3 concurrent | Queued if exceeded |
 | **Dynamics generation** | 2 concurrent | Queued if exceeded |
-| **File uploads** | 10 concurrent | Per API secret |
 
-## Endpoint-Specific Limits
+## Endpoint Guidelines
 
-| Endpoint | Limit | Notes |
-|----------|-------|-------|
-| `POST /v1/validate` | 30/min | Lightweight, for health checks |
-| `POST /v1/agent/generate` | 10/min | Heavy — triggers GPU pipeline |
-| `GET /v1/agent/status/*` | 120/min | Polling — use 5s intervals |
-| `POST /v1/agent/*/speak` | 30/min | Per agent |
-| `POST /v1/files/upload` | 30/min | Per API secret |
-| `POST /v1/dynamics/generate` | 10/min | Triggers video generation |
+| Endpoint | Guidance | Notes |
+|----------|----------|-------|
+| `POST /v1/validate` | Lightweight | Use for health checks |
+| `POST /v1/agent/generate` | Heavy | Triggers GPU pipeline, ~2-5 min |
+| `GET /v1/agent/status/*` | Poll at 5s intervals | Avoid sub-second polling |
+| `POST /v1/agent/*/speak` | Per active session | Agent must be in a room |
+| `POST /v1/files/upload` | 10 MB image, 100 MB video | Size limits enforced |
+| `POST /v1/dynamics/generate` | Heavy | Triggers video generation |
 
 ## Best Practices
 
@@ -106,12 +89,12 @@ Avatar sessions have per-account concurrency limits:
     Agent data rarely changes. Cache `GET /v1/agent/{code}` responses locally and refresh only when needed.
   </Accordion>
 
-  <Accordion title="Batch file uploads">
-    Upload multiple files in parallel (up to 10 concurrent), but implement a semaphore to stay within limits.
-  </Accordion>
-
   <Accordion title="Reuse sessions">
     Keep avatar sessions alive between conversations instead of creating new ones. Session creation is the most expensive operation.
+  </Accordion>
+
+  <Accordion title="Check credits before heavy operations">
+    Use `POST /v1/validate` to verify your account is active before starting agent generation or dynamics creation.
   </Accordion>
 </AccordionGroup>
 

@@ -99,15 +99,15 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  data:
-                    type: object
-                    properties:
-                      agent_id:
-                        type: string
-                        example: "A91XMB7113"
-                      status:
-                        type: string
-                        example: "processing"
+                  message:
+                    type: string
+                    example: "Agent generation started"
+                  agent_id:
+                    type: string
+                    example: "A91XMB7113"
+                  status:
+                    type: string
+                    example: "processing"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
@@ -144,21 +144,45 @@ paths:
                     properties:
                       agent_id:
                         type: string
-                      status:
-                        type: string
-                        enum: [processing, ready, failed]
                       name:
                         type: string
+                      description:
+                        type: string
+                      status:
+                        type: string
+                        enum: [processing, ready, failed, generating, completed]
+                      system_prompt:
+                        type: string
                       image_url:
+                        type: string
+                      video_url:
                         type: string
                       model_url:
                         type: string
                         description: URL to download the .imx model file (when status is ready).
-                      system_prompt:
+                      voice_id:
                         type: string
                       progress:
                         type: number
                         description: Generation progress 0-100.
+                      progress_msg:
+                        type: string
+                        description: Human-readable progress description.
+                      current_step:
+                        type: string
+                        description: Current generation step name.
+                      event_type:
+                        type: string
+                        description: Most recent event (e.g. "lip_created").
+                      error_message:
+                        type: string
+                        description: Error details if status is "failed".
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -192,7 +216,7 @@ paths:
     post:
       operationId: updateAgent
       summary: Update agent
-      description: Update an agent's system prompt or other properties.
+      description: Update an agent's system prompt.
       tags: [Agent Management]
       parameters:
         - name: code
@@ -220,12 +244,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
+                  agent_code:
+                    type: string
+                    example: "A91XMB7113"
+                  updated:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: "Agent updated"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -267,14 +291,16 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
-                    properties:
-                      rooms_notified:
-                        type: integer
-                        example: 1
+                  agent_code:
+                    type: string
+                    example: "A91XMB7113"
+                  context_type:
+                    type: string
+                    example: "speak"
+                  delivered_to_rooms:
+                    type: integer
+                    example: 1
+                    description: Number of active rooms that received the message.
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -299,7 +325,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [context, type]
+              required: [context]
               properties:
                 context:
                   type: string
@@ -308,7 +334,8 @@ paths:
                 type:
                   type: string
                   enum: [add_context, speak]
-                  description: "`add_context` for silent knowledge, `speak` to trigger verbal response."
+                  default: add_context
+                  description: "`add_context` for silent knowledge (default), `speak` to trigger verbal response."
                 room_id:
                   type: string
                   description: Target a specific room (optional).
@@ -320,13 +347,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
-                    properties:
-                      rooms_notified:
-                        type: integer
+                  agent_code:
+                    type: string
+                  context_type:
+                    type: string
+                  delivered_to_rooms:
+                    type: integer
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -346,30 +372,32 @@ paths:
               oneOf:
                 - type: object
                   title: Upload by URL
-                  required: [url]
+                  required: [file_url]
                   properties:
-                    url:
+                    file_url:
                       type: string
                       description: Public URL to download the file from.
                       example: "https://example.com/avatar.jpg"
-                    type:
+                    file_type:
                       type: string
-                      enum: [image, video, audio, document]
+                      enum: [auto, image, video, audio, document]
+                      default: auto
                       description: File type (auto-detected if omitted).
                 - type: object
                   title: Upload by base64
-                  required: [data, filename]
+                  required: [file_data, file_name]
                   properties:
-                    data:
+                    file_data:
                       type: string
                       description: Base64-encoded file data.
-                    filename:
+                    file_name:
                       type: string
                       description: Original filename with extension.
                       example: "avatar.jpg"
-                    type:
+                    file_type:
                       type: string
-                      enum: [image, video, audio, document]
+                      enum: [auto, image, video, audio, document]
+                      default: auto
       responses:
         "200":
           description: File uploaded
@@ -380,17 +408,33 @@ paths:
                 properties:
                   success:
                     type: boolean
+                  message:
+                    type: string
+                    example: "File uploaded successfully"
                   data:
                     type: object
                     properties:
-                      file_id:
+                      file_url:
                         type: string
-                      url:
+                        description: Public CDN URL of the uploaded file.
+                      original_source:
                         type: string
-                      type:
+                        description: Original URL or filename.
+                      file_type:
                         type: string
-                      size:
+                        description: Detected file type category.
+                      file_size:
                         type: integer
+                        description: File size in bytes.
+                      mime_type:
+                        type: string
+                        description: MIME content type.
+                      asset_category:
+                        type: string
+                        description: Storage category (images, videos, audio, docs).
+                      uploaded_at:
+                        type: string
+                        format: date-time
         "413":
           description: File too large (max 10 MB for images, 100 MB for video)
         "415":
@@ -417,7 +461,7 @@ paths:
                   example: "A91XMB7113"
                 duration:
                   type: integer
-                  default: 3
+                  default: 5
                   description: Gesture duration in seconds.
                 model:
                   type: string
@@ -434,14 +478,14 @@ paths:
                 properties:
                   success:
                     type: boolean
-                  data:
-                    type: object
-                    properties:
-                      agent_id:
-                        type: string
-                      status:
-                        type: string
-                        example: "processing"
+                  message:
+                    type: string
+                    example: "Dynamics generation started"
+                  agent_id:
+                    type: string
+                  status:
+                    type: string
+                    example: "processing"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -473,28 +517,23 @@ paths:
                     properties:
                       agent_id:
                         type: string
+                      url:
+                        type: string
+                        description: Model path or null.
                       status:
                         type: string
-                        enum: [ready, processing, failed]
+                        enum: [ready, generating, processing, failed]
                       gestures:
                         type: object
-                        description: Map of gesture name to gesture metadata.
+                        description: Map of gesture name to video URL.
                         additionalProperties:
-                          type: object
-                          properties:
-                            name:
-                              type: string
-                            duration:
-                              type: number
-                            type:
-                              type: string
-                              enum: [wave, nod, smile, idle, talking, custom]
+                          type: string
         "404":
           $ref: "#/components/responses/NotFound"
     put:
       operationId: updateDynamics
       summary: Update dynamics configuration
-      description: Update gesture settings for an agent.
+      description: Update gesture settings for an agent. Can trigger regeneration.
       tags: [Dynamics]
       parameters:
         - name: agent_id
@@ -509,9 +548,12 @@ paths:
             schema:
               type: object
               properties:
-                gestures:
+                dynamics:
                   type: object
-                  description: Updated gesture configuration.
+                  description: Updated dynamics configuration.
+                toggle_enabled:
+                  type: boolean
+                  description: Enable or disable dynamics for the agent.
       responses:
         "200":
           description: Dynamics updated
@@ -522,6 +564,13 @@ paths:
                 properties:
                   success:
                     type: boolean
+                  message:
+                    type: string
+                  agent_id:
+                    type: string
+                  regeneration_status:
+                    type: string
+                    enum: [started, failed]
 
 components:
   securitySchemes:
@@ -543,28 +592,57 @@ components:
         name:
           type: string
           example: "Fitness Coach"
-        status:
+        description:
           type: string
-          enum: [processing, ready, failed]
+        language:
+          type: string
+        gender:
+          type: string
+        model:
+          type: string
+        subject:
+          type: string
         system_prompt:
           type: string
           example: "You are a friendly fitness coach."
         image_url:
           type: string
           description: Avatar face image URL.
+        video_url:
+          type: string
+          description: Avatar source video URL.
         model_url:
           type: string
           description: Downloadable .imx model URL.
+        voice_id:
+          type: string
+          description: Voice identifier.
+        status:
+          type: string
+          description: Current agent state.
+        event_type:
+          type: string
+        progress:
+          type: number
+        progress_msg:
+          type: string
+        current_step:
+          type: string
+        error_message:
+          type: string
         created_at:
           type: string
           format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        dynamics:
+          type: object
+          description: Gesture configuration and available gestures.
 
     Error:
       type: object
       properties:
-        success:
-          type: boolean
-          example: false
         error:
           type: object
           properties:
@@ -574,6 +652,15 @@ components:
             message:
               type: string
               example: "Invalid API secret"
+            httpStatus:
+              type: integer
+              example: 401
+        status:
+          type: string
+          example: "error"
+        status_code:
+          type: integer
+          example: 401
 
   responses:
     Unauthorized:
@@ -583,10 +670,12 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
           example:
-            success: false
             error:
               code: "UNAUTHORIZED"
               message: "Invalid API secret"
+              httpStatus: 401
+            status: "error"
+            status_code: 401
 
     NotFound:
       description: Resource not found
@@ -595,10 +684,12 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
           example:
-            success: false
             error:
               code: "NOT_FOUND"
               message: "Agent not found"
+              httpStatus: 404
+            status: "error"
+            status_code: 404
 
     ValidationError:
       description: Invalid request parameters
@@ -607,10 +698,12 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
           example:
-            success: false
             error:
               code: "VALIDATION_ERROR"
               message: "prompt is required"
+              httpStatus: 400
+            status: "error"
+            status_code: 400
 
 tags:
   - name: Authentication

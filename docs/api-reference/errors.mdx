@@ -10,11 +10,13 @@ All error responses follow a consistent format:
 
 ```json
 {
-  "success": false,
   "error": {
     "code": "ERROR_CODE",
-    "message": "Human-readable description of what went wrong."
-  }
+    "message": "Human-readable description of what went wrong.",
+    "httpStatus": 401
+  },
+  "status": "error",
+  "status_code": 401
 }
 ```
 
