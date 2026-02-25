@@ -39,7 +39,8 @@ export default async function handleToken(
 
     at.addGrant(grant);
     // Enable agent auto-dispatch so the livekit-agents worker gets assigned
-    (at as any).roomConfig = { agents: [{ agentName: "" }] };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (at as Record<string, unknown>).roomConfig = { agents: [{ agentName: "" }] };
     const token = await at.toJwt();
 
     console.log('[token-api] Token generated successfully');
