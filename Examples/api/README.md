@@ -22,7 +22,7 @@ cp .env.example .env
 python test.py
 ```
 
-Validates your API secret and lists your agents. Shows PASS/FAIL with actionable next steps.
+Validates your API secret (and optionally checks agent access with `--agent-id`). Shows PASS/FAIL with actionable next steps.
 
 ### Environment Variables
 

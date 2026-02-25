@@ -58,7 +58,7 @@ python quickstart.py    # Each directory has its own scripts
 | `/v1/agent/{code}/add-context` | POST | Inject silent background knowledge |
 | `/v1/files/upload` | POST | Upload image/video/audio (by URL or base64) |
 | `/v1/dynamics/generate` | POST | Generate gesture animations for agent |
-| `/v1/dynamics/{id}` | GET | List available gestures |
+| `/v1/dynamics/{agent_id}` | GET | List available gestures |
 
 ## Key Packages
 

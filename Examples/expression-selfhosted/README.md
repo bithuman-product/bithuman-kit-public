@@ -107,6 +107,8 @@ All configuration is via `.env`. See `.env.example` for all options.
 | `BITHUMAN_AGENT_ID` | Yes* | Or use a pre-configured agent ID |
 | `CUDA_VISIBLE_DEVICES` | No | GPU index, default `0` |
 | `OPENAI_VOICE` | No | TTS voice, default `coral` |
+| `GPU_PORT` | No | External port for GPU container, default `8089` |
+| `CUSTOM_GPU_TOKEN` | No | Optional auth token for GPU container |
 
 \* Provide either `BITHUMAN_AVATAR_IMAGE` or `BITHUMAN_AGENT_ID`.
 
