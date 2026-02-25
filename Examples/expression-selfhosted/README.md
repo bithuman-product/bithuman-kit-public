@@ -43,7 +43,7 @@ cp /path/to/face.jpg avatars/
 docker compose up
 ```
 
-Open **http://localhost:4202** in your browser. Click to start talking.
+Open **http://localhost:4202** in your browser. Allow microphone access when prompted -- the avatar will appear and start listening.
 
 First run pulls the container image (~10 GB download), then downloads model weights (~5 GB) and compiles the GPU kernels. Total: **5-20 minutes** depending on internet speed. Subsequent starts take ~80 seconds.
 
@@ -175,12 +175,18 @@ Common errors:
   docker compose up
   ```
 
-**Agent crashes?**
+**UI stuck / avatar doesn't appear?**
 ```bash
 docker compose logs agent
 ```
 - Check that `OPENAI_API_KEY` is set in `.env`
 - Check that `BITHUMAN_AVATAR_IMAGE` is a valid URL or container path
+- Wait for `Avatar Worker Ready` in the expression-avatar logs before opening the browser
+- If the agent logs show `registered worker` but no `received job request`, restart the stack:
+  ```bash
+  docker compose down
+  docker compose up
+  ```
 
 **Slow first start?**
 First run downloads ~5 GB of model weights. The `bithuman-models` volume caches them.
@@ -211,7 +217,7 @@ The expression-avatar container exposes these HTTP endpoints on port 8089:
 |----------|--------|-------------|
 | `/health` | GET | Health check |
 | `/ready` | GET | Readiness + capacity |
-| `/launch` | POST | Start avatar session (multipart form) |
+| `/launch` | POST | Start avatar session (JSON or multipart form) |
 | `/tasks` | GET | List active sessions |
 | `/tasks/{id}` | GET | Session status |
 | `/tasks/{id}/stop` | POST | Stop a session |
