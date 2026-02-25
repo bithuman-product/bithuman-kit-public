@@ -22,17 +22,28 @@ export default async function handleToken(
 
     console.log('[token-api] Generating token for:', { roomName, identity });
 
-    // Ensure the room exists and has an agent dispatched
+    // Ensure the room exists and has an agent dispatched.
+    // Retry once if LiveKit isn't ready yet (startup race condition).
     const roomService = new RoomServiceClient(livekitUrl, apiKey, apiSecret);
     const agentDispatch = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
 
-    try {
-      await roomService.createRoom({ name: roomName });
-      await agentDispatch.createDispatch(roomName, "");
-      console.log('[token-api] Room created with agent dispatch');
-    } catch (e) {
-      // Room may already exist or dispatch already active — that's fine
-      console.log('[token-api] Room/dispatch setup:', (e as Error).message?.substring(0, 100));
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await roomService.createRoom({ name: roomName });
+        await agentDispatch.createDispatch(roomName, "");
+        console.log('[token-api] Room created with agent dispatch');
+        break;
+      } catch (e) {
+        const msg = (e as Error).message?.substring(0, 100) || '';
+        if (attempt === 0 && msg.includes('fetch failed')) {
+          console.log('[token-api] LiveKit not ready, retrying in 2s...');
+          await new Promise(r => setTimeout(r, 2000));
+        } else {
+          // Room may already exist or dispatch already active — that's fine
+          console.log('[token-api] Room/dispatch setup:', msg);
+          break;
+        }
+      }
     }
 
     const grant: VideoGrant = {
