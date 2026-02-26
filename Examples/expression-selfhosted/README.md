@@ -123,6 +123,7 @@ All configuration is via `.env`. See `.env.example` for all options.
 | `AGENT_PROMPT` | No | AI persona / system prompt (see [Customization](#customization)) |
 | `GPU_PORT` | No | External port for GPU container, default `8089` |
 | `CUSTOM_GPU_TOKEN` | No | Optional auth token for GPU container |
+| `NODE_IP` | No | LiveKit advertised IP (default `127.0.0.1`, set to public IP for Scenario C) |
 
 ## Customization
 
@@ -162,7 +163,7 @@ Open **http://localhost:4202** in your browser. No firewall changes needed — e
 
 ### Scenario B: Remote VPS + SSH Tunnel (Browser on Your Laptop)
 
-When the stack runs on a **remote server** (e.g., Lambda Labs, cloud GPU) and you open the browser on your **laptop**. This is the easiest approach when the VPS has a restricted firewall.
+When the stack runs on a **remote server** (e.g., Lambda Labs, cloud GPU) and you open the browser on your **laptop**. This is the easiest and most common approach — works with any VPS firewall.
 
 **On the VPS** — start the stack as usual:
 ```bash
@@ -171,28 +172,37 @@ docker compose up
 
 **On your laptop** — open an SSH tunnel, then open the browser:
 ```bash
-ssh -L 4202:localhost:4202 -L 17880:localhost:17880 -L 17881:localhost:17881 user@VPS_IP
+ssh -L 4202:localhost:4202 -L 17881:localhost:17881 user@VPS_IP
 ```
 
 Open **http://localhost:4202** in your laptop browser. The tunnels forward everything transparently:
-- **4202** — Web UI (Next.js frontend)
-- **17880** — LiveKit WebSocket signaling (how the browser negotiates WebRTC)
+- **4202** — Web UI + LiveKit WebSocket signaling (proxied through the same port)
 - **17881** — LiveKit TCP media (actual audio/video stream data)
 
 No `.env` changes needed — the stack auto-detects `localhost` from your browser's address.
 
-### Scenario C: Remote VPS with Open Firewall
+> **How it works:** The frontend includes a built-in WebSocket proxy that routes LiveKit signaling through port 4202. WebRTC media flows over TCP on port 17881. Both work through SSH tunnels because they're TCP.
 
-If you can open ports on your VPS (not all cloud providers allow this):
+### Scenario C: Remote VPS with Open Firewall (Advanced)
+
+If you can open ports and have a domain with HTTPS (or use `chrome://flags/#unsafely-treat-insecure-origin-as-secure`):
 
 ```bash
+# Open required ports
 sudo ufw allow 4202/tcp          # Web UI
-sudo ufw allow 17880/tcp         # LiveKit signaling
-sudo ufw allow 17881/tcp         # LiveKit TCP fallback
-sudo ufw allow 50700:50720/udp   # LiveKit WebRTC media (UDP)
+sudo ufw allow 17881/tcp         # LiveKit TCP media
+sudo ufw allow 50700:50720/udp   # LiveKit WebRTC media (UDP, optional but faster)
+
+# Tell LiveKit your public IP (required for direct access)
+echo "NODE_IP=YOUR_VPS_PUBLIC_IP" >> .env
+
+# Restart
+docker compose down && docker compose up
 ```
 
-Then access `http://YOUR_VPS_IP:4202` from any browser. No SSH tunnel needed.
+Then access `http://YOUR_VPS_IP:4202` from any browser.
+
+> **Note:** Browsers require HTTPS (or `localhost`) for microphone access. Without HTTPS, the avatar will appear but you won't be able to talk to it. For development, use the SSH tunnel approach (Scenario B) instead.
 
 ## Multi-GPU Machines
 

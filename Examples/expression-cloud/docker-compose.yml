@@ -1,7 +1,9 @@
 services:
   livekit:
     image: livekit/livekit-server:latest
-    command: --config /etc/livekit.yaml
+    # NODE_IP=127.0.0.1 makes WebRTC work on localhost and via SSH tunnel.
+    # For direct public access, set NODE_IP=<your_public_ip> in .env.
+    command: --config /etc/livekit.yaml --node-ip ${NODE_IP:-127.0.0.1}
     restart: always
     ports:
       - "17880:17880"
