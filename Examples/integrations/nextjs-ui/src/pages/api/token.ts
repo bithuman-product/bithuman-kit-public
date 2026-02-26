@@ -45,10 +45,10 @@ export default async function handleToken(
     at.addGrant(grant);
     const token = await at.toJwt();
 
-    // Client LiveKit URL: explicit env > auto-detect from browser host
-    const clientUrl = process.env.LIVEKIT_URL
-      || process.env.NEXT_PUBLIC_LIVEKIT_URL
-      || `ws://${(req.headers.host || 'localhost').split(':')[0]}:17880`;
+    // Client LiveKit URL: server.js proxies /rtc WebSocket to LiveKit,
+    // so the browser connects to the same host:port as the frontend.
+    const clientUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL
+      || `ws://${req.headers.host || 'localhost:4202'}`;
 
     console.log('[token-api] Token issued:', { roomName, identity, url: clientUrl });
 

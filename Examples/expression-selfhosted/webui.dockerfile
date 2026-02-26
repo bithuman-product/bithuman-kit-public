@@ -15,4 +15,4 @@ RUN npm run build
 
 ENV NODE_ENV=production
 
-CMD ["sh", "-c", "npx next start -p ${PORT:-3000}"]
+CMD ["sh", "-c", "node server.js"]

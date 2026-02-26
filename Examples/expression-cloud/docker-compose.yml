@@ -49,6 +49,7 @@ services:
       - LIVEKIT_API_KEY=devkey
       - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
       - LIVEKIT_API_URL=http://livekit:17880
+      - LIVEKIT_WS_URL=http://livekit:17880
       - BITHUMAN_AVATAR_IMAGE=${BITHUMAN_AVATAR_IMAGE:-}
       - PORT=4202
     networks:
