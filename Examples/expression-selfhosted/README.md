@@ -117,28 +117,58 @@ All configuration is via `.env`. See `.env.example` for all options.
 |----------|----------|-------------|
 | `BITHUMAN_API_SECRET` | Yes | API secret from bithuman.ai |
 | `OPENAI_API_KEY` | Yes | For AI conversation |
-| `BITHUMAN_AVATAR_IMAGE` | Yes* | Face image URL or container path |
-| `BITHUMAN_AGENT_ID` | Yes* | Or use a pre-configured agent ID |
+| `BITHUMAN_AVATAR_IMAGE` | Yes | Face image URL or container path |
 | `CUDA_VISIBLE_DEVICES` | No | GPU index, default `0` |
 | `OPENAI_VOICE` | No | TTS voice, default `coral` |
+| `AGENT_PROMPT` | No | AI persona / system prompt |
 | `GPU_PORT` | No | External port for GPU container, default `8089` |
 | `CUSTOM_GPU_TOKEN` | No | Optional auth token for GPU container |
 
-\* Provide either `BITHUMAN_AVATAR_IMAGE` or `BITHUMAN_AGENT_ID`.
+## Deployment Scenarios
 
-## Remote / VPS Deployment
+### Scenario A: Everything on One Machine (Local)
 
-The stack auto-detects the server address — no extra configuration needed.
-Just open the required firewall ports:
+When your browser and the stack run on the **same machine** (e.g., a workstation with a GPU):
+
+```bash
+docker compose up
+```
+
+Open **http://localhost:4202** in your browser. No firewall changes needed — everything stays on localhost.
+
+### Scenario B: Remote VPS + SSH Tunnel (Browser on Your Laptop)
+
+When the stack runs on a **remote server** (e.g., Lambda Labs, cloud GPU) and you open the browser on your **laptop**. This is the easiest approach when the VPS has a restricted firewall.
+
+**On the VPS** — start the stack as usual:
+```bash
+docker compose up
+```
+
+**On your laptop** — open an SSH tunnel, then open the browser:
+```bash
+ssh -L 4202:localhost:4202 -L 17880:localhost:17880 -L 17881:localhost:17881 user@VPS_IP
+```
+
+Open **http://localhost:4202** in your laptop browser. The tunnels forward everything transparently:
+- **4202** — Web UI (Next.js frontend)
+- **17880** — LiveKit WebSocket signaling (how the browser negotiates WebRTC)
+- **17881** — LiveKit TCP media (actual audio/video stream data)
+
+No `.env` changes needed — the stack auto-detects `localhost` from your browser's address.
+
+### Scenario C: Remote VPS with Open Firewall
+
+If you can open ports on your VPS (not all cloud providers allow this):
 
 ```bash
 sudo ufw allow 4202/tcp          # Web UI
 sudo ufw allow 17880/tcp         # LiveKit signaling
 sudo ufw allow 17881/tcp         # LiveKit TCP fallback
-sudo ufw allow 50700:50720/udp   # LiveKit WebRTC media
+sudo ufw allow 50700:50720/udp   # LiveKit WebRTC media (UDP)
 ```
 
-Then access `http://YOUR_VPS_IP:4202` from any browser.
+Then access `http://YOUR_VPS_IP:4202` from any browser. No SSH tunnel needed.
 
 ## Multi-GPU Machines
 

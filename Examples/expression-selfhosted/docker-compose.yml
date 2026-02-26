@@ -58,9 +58,9 @@ services:
       - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
       - CUSTOM_GPU_URL=http://expression-avatar:8089/launch
       - CUSTOM_GPU_TOKEN=${CUSTOM_GPU_TOKEN:-}
-      - BITHUMAN_AGENT_ID=${BITHUMAN_AGENT_ID:-}
       - BITHUMAN_AVATAR_IMAGE=${BITHUMAN_AVATAR_IMAGE:-}
       - OPENAI_VOICE=${OPENAI_VOICE:-coral}
+      - AGENT_PROMPT=${AGENT_PROMPT:-}
     env_file:
       - path: ./.env
         required: false
@@ -76,9 +76,7 @@ services:
         condition: service_healthy
 
   frontend:
-    build:
-      context: .
-      dockerfile: webui.dockerfile
+    image: docker.io/sgubithuman/bithuman-webui:latest
     restart: always
     ports:
       - "4202:4202"
@@ -86,6 +84,7 @@ services:
       - LIVEKIT_API_KEY=devkey
       - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
       - LIVEKIT_API_URL=http://livekit:17880
+      - BITHUMAN_AVATAR_IMAGE=${BITHUMAN_AVATAR_IMAGE:-}
       - PORT=4202
     networks:
       - bh-network

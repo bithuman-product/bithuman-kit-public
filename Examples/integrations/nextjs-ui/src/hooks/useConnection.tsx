@@ -10,6 +10,7 @@ type TokenGeneratorData = {
   wsUrl: string;
   token: string;
   mode: ConnectionMode;
+  avatarImage: string;
   disconnect: () => Promise<void>;
   connect: (mode: ConnectionMode) => Promise<void>;
 };
@@ -27,7 +28,8 @@ export const ConnectionProvider = ({
     token: string;
     mode: ConnectionMode;
     shouldConnect: boolean;
-  }>({ wsUrl: "", token: "", shouldConnect: false, mode: "manual" });
+    avatarImage: string;
+  }>({ wsUrl: "", token: "", shouldConnect: false, mode: "manual", avatarImage: "" });
 
   const connect = useCallback(
     async (mode: ConnectionMode) => {
@@ -36,13 +38,14 @@ export const ConnectionProvider = ({
         console.log('[connection] Already connected with the same mode, skipping duplicate request');
         return;
       }
-      
+
       // Set connecting state immediately to prevent parallel requests
       setConnectionDetails(prev => ({ ...prev, mode }));
-      
+
       let token = "";
       let url = "";
-      
+      let avatarImage = "";
+
       if (mode === "env") {
         // Simple parameter setup
         const params = new URLSearchParams();
@@ -67,6 +70,7 @@ export const ConnectionProvider = ({
         const data = await response.json();
         token = data.accessToken;
         url = data.url || process.env.NEXT_PUBLIC_LIVEKIT_URL || '';
+        avatarImage = data.avatarImage || '';
 
         if (!token) {
           throw new Error("Failed to get access token");
@@ -83,6 +87,7 @@ export const ConnectionProvider = ({
         token: token,
         shouldConnect: true,
         mode,
+        avatarImage,
       });
     },
     [connectionDetails.shouldConnect, connectionDetails.mode, config.settings.room_name, config.settings.participant_name]
@@ -95,6 +100,7 @@ export const ConnectionProvider = ({
       token: "",
       shouldConnect: false,
       mode: "manual",
+      avatarImage: "",
     });
   }, []);
 
@@ -105,6 +111,7 @@ export const ConnectionProvider = ({
         token: connectionDetails.token,
         shouldConnect: connectionDetails.shouldConnect,
         mode: connectionDetails.mode,
+        avatarImage: connectionDetails.avatarImage,
         connect,
         disconnect,
       }}

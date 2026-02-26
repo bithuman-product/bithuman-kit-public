@@ -34,25 +34,18 @@ async def entrypoint(ctx: JobContext):
 
     gpu_url = os.getenv("CUSTOM_GPU_URL", "http://expression-avatar:8089/launch")
     avatar_image = os.getenv("BITHUMAN_AVATAR_IMAGE", "").strip()
-    avatar_id = os.getenv("BITHUMAN_AGENT_ID", "").strip()
 
-    if not avatar_image and not avatar_id:
-        raise ValueError(
-            "Set BITHUMAN_AVATAR_IMAGE (face photo) or BITHUMAN_AGENT_ID in .env"
-        )
+    if not avatar_image:
+        raise ValueError("Set BITHUMAN_AVATAR_IMAGE (face photo URL or path) in .env")
+
+    logger.info(f"Self-hosted GPU -- avatar_image: {avatar_image}, endpoint: {gpu_url}")
 
     kwargs: dict = {
         "api_secret": os.getenv("BITHUMAN_API_SECRET"),
         "api_url": gpu_url,
         "api_token": os.getenv("CUSTOM_GPU_TOKEN") or None,
+        "avatar_image": avatar_image,
     }
-
-    if avatar_id:
-        kwargs["avatar_id"] = avatar_id
-        logger.info(f"Self-hosted GPU -- avatar_id: {avatar_id}, endpoint: {gpu_url}")
-    elif avatar_image:
-        kwargs["avatar_image"] = avatar_image
-        logger.info(f"Self-hosted GPU -- avatar_image: {avatar_image}, endpoint: {gpu_url}")
 
     avatar = bithuman.AvatarSession(**kwargs)
 
@@ -68,7 +61,7 @@ async def entrypoint(ctx: JobContext):
 
     await session.start(
         agent=Agent(
-            instructions="You are a helpful assistant. Respond concisely."
+            instructions=os.getenv("AGENT_PROMPT", "You are a helpful assistant. Respond concisely.")
         ),
         room=ctx.room,
         room_output_options=RoomOutputOptions(audio_enabled=False),

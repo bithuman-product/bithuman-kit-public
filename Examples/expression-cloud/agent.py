@@ -66,7 +66,7 @@ async def entrypoint(ctx: JobContext):
 
     await session.start(
         agent=Agent(
-            instructions="You are a helpful assistant. Respond concisely."
+            instructions=os.getenv("AGENT_PROMPT", "You are a helpful assistant. Respond concisely.")
         ),
         room=ctx.room,
         room_output_options=RoomOutputOptions(audio_enabled=False),

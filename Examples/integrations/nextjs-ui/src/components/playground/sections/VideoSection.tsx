@@ -2,6 +2,7 @@ import React from 'react';
 import { TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { ConnectionState } from 'livekit-client';
 import { VideoDisplay } from '../VideoDisplay';
+import { useConnection } from '@/hooks/useConnection';
 
 interface VideoSectionConfig {
   video_fit?: string;
@@ -28,6 +29,8 @@ export const VideoSection = ({
   isCameraEnabled,
   config,
 }: VideoSectionProps) => {
+  const { avatarImage } = useConnection();
+
   // Simple loading text for connecting states
   const loadingContent = (
     <div className="flex items-center justify-center h-full w-full">
@@ -36,7 +39,7 @@ export const VideoSection = ({
   );
 
   let content = null;
-  
+
   if (roomState === ConnectionState.Connected) {
     // Only directly show content when fully connected
     content = (
@@ -46,6 +49,7 @@ export const VideoSection = ({
         isCameraEnabled={isCameraEnabled}
         roomState={roomState}
         videoFit={config.video_fit || 'cover'}
+        avatarImage={avatarImage}
       />
     );
   } else {
@@ -58,4 +62,4 @@ export const VideoSection = ({
       {content}
     </div>
   );
-}; 
+};

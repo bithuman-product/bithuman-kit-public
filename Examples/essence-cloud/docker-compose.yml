@@ -26,6 +26,7 @@ services:
       # Dev-only credentials (matches livekit.yaml). Replace for production.
       - LIVEKIT_API_KEY=devkey
       - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
+      - AGENT_PROMPT=${AGENT_PROMPT:-}
     env_file:
       - path: ./.env
         required: false
@@ -38,9 +39,7 @@ services:
         condition: service_started
 
   frontend:
-    build:
-      context: .
-      dockerfile: webui.dockerfile
+    image: docker.io/sgubithuman/bithuman-webui:latest
     restart: always
     ports:
       - "4202:4202"
@@ -49,6 +48,7 @@ services:
       - LIVEKIT_API_KEY=devkey
       - LIVEKIT_API_SECRET=UPivas8PQvWiYhubkqxqfkY8kfB9TgGj
       - LIVEKIT_API_URL=http://livekit:17880
+      - BITHUMAN_AVATAR_IMAGE=${BITHUMAN_AVATAR_IMAGE:-}
       - PORT=4202
     networks:
       - bh-network
