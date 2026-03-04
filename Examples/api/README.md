@@ -13,7 +13,7 @@ No SDK or local runtime needed -- just Python + HTTP.
 ```bash
 pip install -r requirements.txt
 cp .env.example .env
-# Edit .env -- add your API secret from https://www.bithuman.ai (Developer section)
+# Edit .env -- add your API secret from https://www.bithuman.ai/#developer (Developer → API Keys)
 ```
 
 ### Quick Test
@@ -28,7 +28,7 @@ Validates your API secret (and optionally checks agent access with `--agent-id`)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `BITHUMAN_API_SECRET` | Yes | Your API secret from https://www.bithuman.ai (Developer section) |
+| `BITHUMAN_API_SECRET` | Yes | Your API secret from https://www.bithuman.ai/#developer (Developer → API Keys) |
 | `BITHUMAN_API_URL` | No | Custom API endpoint (default: `https://api.bithuman.ai`) |
 | `BITHUMAN_AGENT_ID` | No | Default agent ID for management.py |
 

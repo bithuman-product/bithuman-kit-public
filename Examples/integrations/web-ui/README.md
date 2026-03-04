@@ -6,7 +6,7 @@ Talk to a bitHuman avatar through your browser using Gradio and FastRTC.
 
 - Python 3.9+
 - `.imx` avatar model files (download from [www.bithuman.ai](https://www.bithuman.ai) > Community)
-- bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai) > Developer section)
+- bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai/#developer) → Developer → API Keys)
 - OpenAI API key (for AI conversation via OpenAI Realtime API)
 
 ## Quick Start

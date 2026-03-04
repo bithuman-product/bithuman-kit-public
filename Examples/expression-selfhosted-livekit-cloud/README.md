@@ -1,19 +1,35 @@
-# Expression + Self-Hosted
+# Expression + Self-Hosted + LiveKit Cloud
 
-Run a bitHuman Expression (GPU) avatar on your own hardware.
-Full local control -- audio and video stay on your machine.
+Run a bitHuman Expression (GPU) avatar on your own hardware with **LiveKit Cloud** handling WebRTC.
+
+No SSH tunnels, no port forwarding, no local LiveKit server. The browser connects directly to LiveKit Cloud's HTTPS endpoint -- works from any machine with a browser.
+
+## Why LiveKit Cloud?
+
+The [expression-selfhosted](../expression-selfhosted/) example runs everything locally (5 services, SSH tunnels for remote access). This variant replaces the local LiveKit + Redis with a free LiveKit Cloud project, reducing the stack to **3 services**:
+
+```
+expression-selfhosted (5 services):
+  Browser --WebRTC--> LiveKit(local) --dispatch--> Agent --HTTP--> GPU
+                        |
+                     + Redis
+                     + ports 17880, 17881, 50700-50720
+
+expression-selfhosted-livekit-cloud (3 services):
+  Browser --WebRTC--> LiveKit Cloud --dispatch--> Agent --HTTP--> GPU
+                      (no local infra)
+```
 
 ## Prerequisites
 
-- NVIDIA GPU with 8 GB+ VRAM (any CUDA GPU — tested on H100, A100, RTX 4090, RTX 3090)
+- NVIDIA GPU with 8 GB+ VRAM (any CUDA GPU -- tested on H100, A100, RTX 4090, RTX 3090)
 - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
 - Docker 24+ with Compose v2
 - ~30 GB free disk space (19 GB image + 8 GB model weights)
 - bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai/#developer) → Developer → API Keys)
 - OpenAI API key (for the AI conversation agent)
+- **LiveKit Cloud account** (free tier at [cloud.livekit.io](https://cloud.livekit.io))
 - A face image (any JPEG/PNG, or use the default provided in `.env.example`)
-
-> **GPU compatibility:** The container uses PyTorch + torch.compile, which works on any CUDA GPU. No pre-built TensorRT engines required.
 
 ## Verify GPU Access
 
@@ -23,29 +39,52 @@ docker run --rm --gpus all nvidia/cuda:12.8.0-base-ubuntu22.04 nvidia-smi
 
 If this fails, install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) first.
 
-## Quick Start (Full Stack)
+## Quick Start
 
 ```bash
 # 1. Clone and enter the directory
 git clone https://github.com/bithuman-product/examples.git
-cd examples/expression-selfhosted
+cd examples/expression-selfhosted-livekit-cloud
 
 # 2. Create your .env file
 cp .env.example .env
-# Edit .env: set BITHUMAN_API_SECRET and OPENAI_API_KEY
+# Edit .env: set BITHUMAN_API_SECRET, OPENAI_API_KEY, and LiveKit Cloud credentials
 
-# 3. (Optional) Use your own face image
+# 3. Get LiveKit Cloud credentials
+#    - Sign up at https://cloud.livekit.io
+#    - Create a project
+#    - Copy the WebSocket URL, API Key, and API Secret into .env
+
+# 4. (Optional) Use your own face image
 mkdir -p avatars
 cp /path/to/face.jpg avatars/
 # Then in .env set: BITHUMAN_AVATAR_IMAGE=/app/avatars/face.jpg
 
-# 4. Start everything
+# 5. Start everything (only 3 containers)
 docker compose up
 ```
 
-Open **http://localhost:4202** in your browser. Allow microphone access when prompted -- the avatar will appear and start listening.
+Only 3 containers start (no LiveKit server, no Redis).
 
 First run pulls the container image (~10 GB download), then downloads model weights (~5 GB) and compiles the GPU kernels. Total: **5-20 minutes** depending on internet speed. Subsequent starts take ~80 seconds.
+
+## Accessing the UI
+
+### From the same machine (localhost)
+
+Open **http://localhost:4202** -- microphone works on localhost without HTTPS.
+
+### From a remote VPS
+
+The browser still needs HTTPS (or localhost) for microphone access. Since LiveKit Cloud handles WebRTC, you only need to tunnel **one port** (the frontend):
+
+```bash
+ssh -L 4202:localhost:4202 user@VPS_IP
+```
+
+Open **http://localhost:4202** on your laptop. That's it -- no extra ports needed.
+
+> **Tip:** For a permanent setup, add nginx + certbot for HTTPS on port 443 and skip the SSH tunnel entirely.
 
 ## Quick Start (GPU Container Only)
 
@@ -66,49 +105,6 @@ curl http://localhost:8089/test-frame -o test.jpg   # check the output image
 curl -X POST http://localhost:8089/benchmark         # check FPS
 ```
 
-To run the interactive quickstart (requires a desktop with display + audio):
-
-```bash
-# From the cloned repo directory (expression-selfhosted/)
-pip install -r requirements.txt
-python quickstart.py --avatar-image face.jpg --audio-file speech.wav   # speech.wav included
-```
-
-> **Note:** `quickstart.py` opens an OpenCV window and plays audio. For headless/SSH servers, use the Full Stack path above (browser at localhost:4202) or the curl endpoints.
-
-## Verify the GPU Container
-
-```bash
-# Health check
-curl http://localhost:8089/health
-
-# Readiness (model loaded + available capacity)
-curl http://localhost:8089/ready
-
-# Visual test -- generates frames and returns a JPEG
-curl http://localhost:8089/test-frame -o test.jpg
-# Open test.jpg in any image viewer to verify
-```
-
-## Architecture
-
-The Docker Compose stack runs 5 services:
-
-```
-Browser ──WebRTC──> LiveKit ──dispatch──> Agent ──HTTP──> Expression Avatar (GPU)
-                      |                     |                    |
-                   port 17880          AI conversation      renders video
-                                       (OpenAI)            port 8089
-```
-
-| Service | Description | Port |
-|---------|-------------|------|
-| **expression-avatar** | GPU rendering (1.3B parameter model) | 8089 |
-| **livekit** | WebRTC media server | 17880 |
-| **agent** | AI conversation + avatar orchestration | (internal) |
-| **frontend** | Web UI | 4202 |
-| **redis** | LiveKit state | (internal) |
-
 ## Configuration
 
 All configuration is via `.env`. See `.env.example` for all options.
@@ -117,13 +113,15 @@ All configuration is via `.env`. See `.env.example` for all options.
 |----------|----------|-------------|
 | `BITHUMAN_API_SECRET` | Yes | API secret from bithuman.ai |
 | `OPENAI_API_KEY` | Yes | For AI conversation |
+| `LIVEKIT_URL` | Yes | LiveKit Cloud WebSocket URL (`wss://...livekit.cloud`) |
+| `LIVEKIT_API_KEY` | Yes | LiveKit Cloud API key |
+| `LIVEKIT_API_SECRET` | Yes | LiveKit Cloud API secret |
 | `BITHUMAN_AVATAR_IMAGE` | Yes | Face image URL or container path |
 | `CUDA_VISIBLE_DEVICES` | No | GPU index, default `0` |
 | `OPENAI_VOICE` | No | TTS voice, default `coral` |
 | `AGENT_PROMPT` | No | AI persona / system prompt (see [Customization](#customization)) |
 | `GPU_PORT` | No | External port for GPU container, default `8089` |
 | `CUSTOM_GPU_TOKEN` | No | Optional auth token for GPU container |
-| `NODE_IP` | No | LiveKit advertised IP (default `127.0.0.1`, set to public IP for Scenario C) |
 
 ## Customization
 
@@ -147,62 +145,22 @@ After changing `.env`, restart the agent:
 docker compose restart agent
 ```
 
-If left unset, `AGENT_PROMPT` defaults to `"You are a helpful assistant. Respond concisely."` and `OPENAI_VOICE` defaults to `coral`.
+## Architecture
 
-## Deployment Scenarios
-
-### Scenario A: Everything on One Machine (Local)
-
-When your browser and the stack run on the **same machine** (e.g., a workstation with a GPU):
-
-```bash
-docker compose up
+```
+Browser --WebRTC--> LiveKit Cloud --dispatch--> Agent --HTTP--> Expression Avatar (GPU)
+                    (cloud.livekit.io)            |                    |
+                                              AI conversation      renders video
+                                              (OpenAI)            port 8089
 ```
 
-Open **http://localhost:4202** in your browser. No firewall changes needed — everything stays on localhost.
+| Service | Description | Port |
+|---------|-------------|------|
+| **expression-avatar** | GPU rendering (1.3B parameter model) | 8089 |
+| **agent** | AI conversation + avatar orchestration | (internal) |
+| **frontend** | Web UI | 4202 |
 
-### Scenario B: Remote VPS + SSH Tunnel (Browser on Your Laptop)
-
-When the stack runs on a **remote server** (e.g., Lambda Labs, cloud GPU) and you open the browser on your **laptop**. This is the easiest and most common approach — works with any VPS firewall.
-
-**On the VPS** — start the stack as usual:
-```bash
-docker compose up
-```
-
-**On your laptop** — open an SSH tunnel, then open the browser:
-```bash
-ssh -L 4202:localhost:4202 -L 17881:localhost:17881 user@VPS_IP
-```
-
-Open **http://localhost:4202** in your laptop browser. The tunnels forward everything transparently:
-- **4202** — Web UI + LiveKit WebSocket signaling (proxied through the same port)
-- **17881** — LiveKit TCP media (actual audio/video stream data)
-
-No `.env` changes needed — the stack auto-detects `localhost` from your browser's address.
-
-> **How it works:** The frontend includes a built-in WebSocket proxy that routes LiveKit signaling through port 4202. WebRTC media flows over TCP on port 17881. Both work through SSH tunnels because they're TCP.
-
-### Scenario C: Remote VPS with Open Firewall (Advanced)
-
-If you can open ports and have a domain with HTTPS (or use `chrome://flags/#unsafely-treat-insecure-origin-as-secure`):
-
-```bash
-# Open required ports
-sudo ufw allow 4202/tcp          # Web UI
-sudo ufw allow 17881/tcp         # LiveKit TCP media
-sudo ufw allow 50700:50720/udp   # LiveKit WebRTC media (UDP, optional but faster)
-
-# Tell LiveKit your public IP (required for direct access)
-echo "NODE_IP=YOUR_VPS_PUBLIC_IP" >> .env
-
-# Restart
-docker compose down && docker compose up
-```
-
-Then access `http://YOUR_VPS_IP:4202` from any browser.
-
-> **Note:** Browsers require HTTPS (or `localhost`) for microphone access. Without HTTPS, the avatar will appear but you won't be able to talk to it. For development, use the SSH tunnel approach (Scenario B) instead.
+LiveKit Cloud replaces the local LiveKit server and Redis -- no ports 17880, 17881, or 50700-50720 needed.
 
 ## Multi-GPU Machines
 
@@ -247,28 +205,28 @@ Common errors:
   docker compose down -v
   docker compose up
   ```
-- `DiT safetensors not found after decryption` -- Encrypted volume may be corrupted. Remove and re-download:
-  ```bash
-  docker volume rm bithuman-models
-  docker compose up
-  ```
 
-**UI stuck / avatar doesn't appear?**
+**Agent can't connect to LiveKit Cloud?**
+```bash
+docker compose logs agent
+```
+- Check `LIVEKIT_URL` starts with `wss://` (not `ws://`)
+- Verify `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` match your LiveKit Cloud project
+- Ensure the VPS has outbound internet access on port 443
+
+**UI loads but avatar doesn't appear?**
 ```bash
 docker compose logs agent
 ```
 - Check that `OPENAI_API_KEY` is set in `.env`
 - Check that `BITHUMAN_AVATAR_IMAGE` is a valid URL or container path
 - Wait for `Avatar Worker Ready` in the expression-avatar logs before opening the browser
-- If the agent logs show `registered worker` but no `received job request`, restart the stack:
-  ```bash
-  docker compose down
-  docker compose up
-  ```
+- Open browser DevTools > Console and check for WebSocket connection errors
 
-**Slow first start?**
-First run downloads ~5 GB of model weights. The `bithuman-models` volume caches them.
-GPU compilation (torch.compile) takes ~48s on first inference.
+**Microphone not working?**
+- Browsers require HTTPS or localhost for microphone access
+- Use the SSH tunnel (`ssh -L 4202:localhost:4202`) so the browser sees `localhost`
+- Or set up nginx + certbot for HTTPS
 
 **Port conflict?**
 Change exposed ports in `.env`:
@@ -280,11 +238,10 @@ GPU_PORT=9089            # Expression avatar (default: 8089)
 
 | File | Description |
 |------|-------------|
-| `docker-compose.yml` | Full stack (GPU + agent + frontend + LiveKit + Redis) |
+| `docker-compose.yml` | Stack: GPU + agent + frontend (3 services, no local LiveKit) |
 | `quickstart.py` | Animate a face image with audio (standalone, no LiveKit) |
 | `agent.py` | LiveKit agent connecting to local GPU container |
 | `.env.example` | Environment variable template |
-| `livekit.yaml` | LiveKit server configuration |
 | `speech.wav` | Sample audio file for quickstart (13s, 16kHz) |
 
 ## API Reference

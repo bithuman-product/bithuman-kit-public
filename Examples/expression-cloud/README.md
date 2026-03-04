@@ -6,7 +6,7 @@ No local GPU needed. Provide any face image and the cloud renders a high-fidelit
 ## Prerequisites
 
 - Python 3.9+ (or Docker)
-- bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai) > Developer section)
+- bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai/#developer) → Developer → API Keys)
 - A face image (JPEG/PNG -- any photo with a clear face)
 - OpenAI API key (for `agent.py`)
 

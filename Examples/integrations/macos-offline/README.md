@@ -55,7 +55,7 @@ Ollama serves on port 11434 by default.
 
 ### 5. Configure Environment
 
-**Get your bitHuman API Secret** from [https://www.bithuman.ai](https://www.bithuman.ai) (Developer section).
+**Get your bitHuman API Secret** from [https://www.bithuman.ai](https://www.bithuman.ai/#developer) (Developer → API Keys).
 
 Create a `.env` file:
 

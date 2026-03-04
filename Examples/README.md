@@ -22,6 +22,7 @@ Four combinations of model type and deployment mode.
 | [essence-selfhosted/](essence-selfhosted/) | Essence (CPU) | Your machine | No | API secret + `.imx` model file |
 | [expression-cloud/](expression-cloud/) | Expression (GPU) | bitHuman Cloud | No | API secret + face image |
 | [expression-selfhosted/](expression-selfhosted/) | Expression (GPU) | Your machine | Yes (8GB+) | API secret + NVIDIA GPU |
+| [expression-selfhosted-livekit-cloud/](expression-selfhosted-livekit-cloud/) | Expression (GPU) | Your machine + LiveKit Cloud | Yes (8GB+) | API secret + NVIDIA GPU + LiveKit Cloud |
 
 **Essence** avatars use pre-built `.imx` model files. **Expression** avatars accept any face image and render with a GPU-powered 1.3B parameter model.
 
@@ -51,9 +52,9 @@ cd expression-selfhosted/      # GPU avatar on your hardware
 ## Resources
 
 - [bitHuman Documentation](https://docs.bithuman.ai)
-- [bitHuman Console](https://www.bithuman.ai)
+- [bitHuman Platform](https://www.bithuman.ai)
 - [bitHuman Runtime (PyPI)](https://pypi.org/project/bithuman/)
-- [bitHuman Website](https://bithuman.io)
+- [API Keys](https://www.bithuman.ai/#developer)
 
 ## License
 

@@ -6,7 +6,7 @@ No GPU needed. Audio stays on your machine -- only authentication calls the clou
 ## Prerequisites
 
 - Python 3.9+ (or Docker)
-- bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai) > Developer section)
+- bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai/#developer) → Developer → API Keys)
 - `.imx` model file (see below)
 - OpenAI API key (for `conversation.py` and `agent.py`)
 

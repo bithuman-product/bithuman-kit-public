@@ -6,7 +6,7 @@ No local GPU, no `.imx` model files. Just an API secret and an agent ID.
 ## Prerequisites
 
 - Python 3.9+ (or Docker)
-- bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai) > Developer section)
+- bitHuman API secret ([www.bithuman.ai](https://www.bithuman.ai/#developer) → Developer → API Keys)
 - An agent ID (create one at [www.bithuman.ai](https://www.bithuman.ai) or via `../api/generation.py`)
 - OpenAI API key (for `agent.py`)
 
