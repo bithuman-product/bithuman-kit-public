@@ -25,8 +25,12 @@ icon: "rocket"
 ## 2. Install
 
 ```bash
-pip install bithuman opencv-python --upgrade
+pip install bithuman --upgrade
 ```
+
+<Note>
+The SDK includes `opencv-python-headless` automatically. Do **not** install `opencv-python` (full) separately — it conflicts with PyAV and causes FFmpeg warnings on macOS.
+</Note>
 
 ## 3. Run Your First Avatar
 

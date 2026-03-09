@@ -27,7 +27,45 @@ The avatar runs entirely in bitHuman's cloud. Your website just needs a small em
 
 ---
 
-## Quick Start
+## Quick Start (Zero Config)
+
+The simplest way to embed an agent — one line of HTML, no backend needed:
+
+```html
+<iframe
+  src="https://agent.viewer.bithuman.ai/api/embed/YOUR_AGENT_CODE"
+  allow="microphone *; camera *; autoplay *"
+  style="width: 400px; height: 700px; border: none; border-radius: 12px;"
+></iframe>
+```
+
+Replace `YOUR_AGENT_CODE` with your agent's code (e.g. `A78WKV4515`). Find it in the [Library](https://www.bithuman.ai/#library) or the Deploy & Share dialog.
+
+### Customize with URL Parameters
+
+| Parameter | Example | Description |
+|-----------|---------|-------------|
+| `chat_mode` | `text` | Start in text-only mode (`text`, `voice`, or `video`) |
+| `greetingLang` | `de` | Greet in a specific language (ISO 639-1 code) |
+| `greetingMsg` | `Hello!` | Custom greeting message |
+
+```html
+<iframe
+  src="https://agent.viewer.bithuman.ai/api/embed/A78WKV4515?chat_mode=text&greetingLang=de"
+  allow="microphone *; camera *; autoplay *"
+  style="width: 400px; height: 700px; border: none; border-radius: 12px;"
+></iframe>
+```
+
+<Info>
+The embed endpoint generates a session token automatically. No API secret or backend is needed. Sessions don't expire — the embedded agent works indefinitely.
+</Info>
+
+---
+
+## Advanced: Token-Based Embed
+
+For more control (e.g. custom billing, session tracking), generate tokens from your backend:
 
 <Steps>
   <Step title="Generate an embed token">
@@ -45,33 +83,8 @@ The avatar runs entirely in bitHuman's cloud. Your website just needs a small em
         },
     )
     data = resp.json()["data"]
-    token = data["token"]       # Short-lived JWT
+    token = data["token"]       # JWT token
     session_id = data["sid"]    # Session identifier
-    ```
-  </Step>
-  <Step title="Pass the token to your frontend">
-    Send the token to your frontend via your own API endpoint:
-
-    ```javascript
-    // Your backend endpoint (Express example)
-    app.get("/api/avatar-token", async (req, res) => {
-      const response = await fetch(
-        "https://api.bithuman.ai/v1/embed-tokens/request",
-        {
-          method: "POST",
-          headers: {
-            "api-secret": process.env.BITHUMAN_API_SECRET,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            agent_id: "A78WKV4515",
-            fingerprint: req.query.fp || "anonymous",
-          }),
-        }
-      );
-      const data = await response.json();
-      res.json(data.data);
-    });
     ```
   </Step>
   <Step title="Embed in your page">
@@ -79,25 +92,13 @@ The avatar runs entirely in bitHuman's cloud. Your website just needs a small em
 
     ```html
     <iframe
-      src="https://agent.viewer.bithuman.ai/A78WKV4515?token=TOKEN_HERE"
-      width="400"
-      height="400"
-      allow="microphone; camera"
-      style="border: none; border-radius: 12px;"
+      src="https://agent.viewer.bithuman.ai/A78WKV4515?token=TOKEN_HERE&sid=SESSION_ID"
+      allow="microphone *; camera *; autoplay *"
+      style="width: 400px; height: 700px; border: none; border-radius: 12px;"
     ></iframe>
     ```
   </Step>
 </Steps>
-
----
-
-## Token Details
-
-| Property | Value |
-|----------|-------|
-| **Lifetime** | 1 hour |
-| **Scope** | Single agent, single session |
-| **JWT claims** | `userId`, `sessionId`, `agentCode`, `model`, `app` |
 
 <Warning>
 **Never put your API secret in frontend code.** Always generate embed tokens from your backend server. The API secret grants full access to your account.
@@ -105,67 +106,61 @@ The avatar runs entirely in bitHuman's cloud. Your website just needs a small em
 
 ---
 
-## Complete Example (Python + HTML)
+## embed.js Widget
 
-### Backend (Flask)
-
-```python
-from flask import Flask, jsonify, request
-import requests
-import os
-
-app = Flask(__name__)
-
-@app.route("/api/avatar-token")
-def get_token():
-    resp = requests.post(
-        "https://api.bithuman.ai/v1/embed-tokens/request",
-        headers={"api-secret": os.environ["BITHUMAN_API_SECRET"]},
-        json={
-            "agent_id": "A78WKV4515",
-            "fingerprint": request.args.get("fp", "web-visitor"),
-        },
-    )
-    return jsonify(resp.json()["data"])
-
-if __name__ == "__main__":
-    app.run(port=3000)
-```
-
-### Frontend (HTML)
+For a floating chat button that opens an avatar panel, use `embed.js`:
 
 ```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>My Website with Avatar</title>
-</head>
-<body>
-  <h1>Talk to Our AI Assistant</h1>
-  <div id="avatar-container"></div>
+<script
+  src="https://agent.viewer.bithuman.ai/embed.js"
+  data-agent-id="A78WKV4515"
+></script>
+```
 
-  <script>
-    async function loadAvatar() {
-      // Get token from your backend
-      const resp = await fetch("/api/avatar-token?fp=" + navigator.userAgent);
-      const { token } = await resp.json();
+No API secret needed — the script uses the zero-config embed endpoint automatically. The widget appears as a floating button in the bottom-right corner.
 
-      // Create iframe
-      const iframe = document.createElement("iframe");
-      iframe.src = `https://agent.viewer.bithuman.ai/A78WKV4515?token=${token}`;
-      iframe.width = "400";
-      iframe.height = "400";
-      iframe.allow = "microphone; camera";
-      iframe.style.border = "none";
-      iframe.style.borderRadius = "12px";
+### With API Secret (for custom billing)
 
-      document.getElementById("avatar-container").appendChild(iframe);
-    }
+```html
+<script
+  src="https://agent.viewer.bithuman.ai/embed.js"
+  data-agent-id="A78WKV4515"
+  data-api-secret="your_api_secret"
+></script>
+```
 
-    loadAvatar();
-  </script>
-</body>
-</html>
+### Programmatic Control
+
+```javascript
+// Initialize with options
+window.bitHuman.init({
+  agentId: "A78WKV4515",
+  position: "bottom-right",    // top-left, top-right, bottom-left, bottom-right, center
+  width: "400px",
+  height: "700px",
+  container: "#my-container",  // Optional: embed in a specific element
+});
+```
+
+---
+
+## Gadget Widget
+
+For a customizable floating button with avatar thumbnail:
+
+```html
+<script src="https://www.bithuman.ai/bithuman-web-gadget.js"></script>
+<script>
+  BitHumanGadget.init({
+    agentUrl: "https://bithuman.ai/A78WKV4515?deployment=gadget",
+    buttonStyle: "pill",       // pill, circle, square
+    position: "bottom-right",
+    theme: "light",            // light, dark
+    size: 200,
+    draggable: true,
+    resizable: true,
+  });
+</script>
 ```
 
 ---
@@ -214,10 +209,11 @@ await fetch("https://api.bithuman.ai/v1/agent/A78WKV4515/speak", {
 
 | Problem | Solution |
 |---------|----------|
-| Blank iframe | Check that the token is valid and not expired (1 hour TTL) |
-| No audio | Ensure `allow="microphone"` is set on the iframe |
-| CORS errors | Embed tokens must be generated from your backend, not frontend |
-| Avatar not responding | Check agent has an active session — verify agent_id in your [Library](https://www.bithuman.ai/#library) |
+| Blank iframe | For zero-config embed, check that your agent code is correct. For token-based, verify token is valid. |
+| No audio | Ensure `allow="microphone *"` is set on the iframe (note the `*` for cross-origin) |
+| CORS errors | Use the zero-config embed URL (`/api/embed/CODE`) which handles CORS automatically |
+| Avatar not responding | Check agent exists in your [Library](https://www.bithuman.ai/#library) and has status "Ready" |
+| iframe blocked | Some browsers block third-party iframes. Add `allow="microphone *; camera *; autoplay *"` |
 
 ---
 
