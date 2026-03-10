@@ -1,7 +1,68 @@
 ---
-title: "Rate Limits & Quotas"
-description: "API request limits, concurrency limits, and retry guidance for the bitHuman REST API."
+title: "Credits, Rate Limits & Quotas"
+description: "Check your credit balance, understand usage rates, and handle API limits."
 icon: "gauge-high"
+---
+
+## Check Your Credit Balance
+
+```bash
+curl https://api.bithuman.ai/v2/credit-summaries \
+  -H "api-secret: YOUR_API_SECRET"
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "balance": 5240,
+    "plan_credits": 240,
+    "topup_credits": 5000,
+    "is_enterprise": false,
+    "minutes_estimate": {
+      "voice_chat": 524,
+      "camera_chat": 174,
+      "essence_cloud": 2620,
+      "essence_self_hosted": 5240,
+      "expression_cloud": 1310,
+      "expression_self_hosted": 2620
+    }
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `balance` | Total usable credits (plan + topup) |
+| `plan_credits` | Monthly subscription credits — reset each billing cycle |
+| `topup_credits` | Purchased credits — carry over until used |
+| `is_enterprise` | If `true`, unlimited usage (no credit deductions) |
+| `minutes_estimate` | Pre-calculated minutes remaining for each use case |
+
+---
+
+## Credit Rates
+
+Different features consume credits at different rates per minute:
+
+| Feature | Credits/min | Description |
+|---------|------------|-------------|
+| **Voice Chat** | 10 | Cloud agent with STT + LLM + TTS |
+| **Camera Chat** | 30 | Cloud agent with user camera enabled |
+| **Essence (Cloud)** | 2 | Cloud-hosted CPU avatar rendering |
+| **Essence (Self-Hosted)** | 1 | Your infrastructure, CPU avatar rendering |
+| **Expression (Cloud)** | 4 | Cloud-hosted GPU avatar rendering |
+| **Expression (Self-Hosted)** | 2 | Your infrastructure, GPU avatar rendering |
+
+One-time costs:
+
+| Operation | Credits | Description |
+|-----------|---------|-------------|
+| **Agent Generation** | 250 | Create a new avatar agent |
+| **Dynamics Generation** | 250 | Generate gestures/movements for an agent |
+
 ---
 
 ## Request Limits
@@ -11,7 +72,8 @@ API endpoints are rate-limited to protect service quality. Limits are applied pe
 | Tier | Concurrent Sessions | Agent Generations/day |
 |------|---------------------|----------------------|
 | **Free** | 2 | 5 |
-| **Pro** | 10 | 50 |
+| **Creator** ($20/mo) | 5 | 20 |
+| **Pro** ($99/mo) | 10 | 50 |
 | **Enterprise** | Custom | Custom |
 
 <Info>
@@ -96,7 +158,12 @@ Avatar sessions have per-account concurrency limits:
   </Accordion>
 
   <Accordion title="Check credits before heavy operations">
-    Use `POST /v1/validate` to verify your account is active before starting agent generation or dynamics creation.
+    Call `GET /v2/credit-summaries` to check your balance before starting agent generation (250 credits) or dynamics creation (250 credits). This avoids wasted API calls that fail with `402`.
+
+    ```bash
+    curl https://api.bithuman.ai/v2/credit-summaries \
+      -H "api-secret: YOUR_API_SECRET"
+    ```
   </Accordion>
 </AccordionGroup>
 
