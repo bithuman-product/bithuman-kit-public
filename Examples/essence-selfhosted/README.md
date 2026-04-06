@@ -12,7 +12,7 @@ No GPU needed. Audio stays on your machine -- only authentication calls the clou
 
 ## Get an .imx Model
 
-Option A -- **Download from the console**: Browse [www.bithuman.ai](https://www.bithuman.ai) > Community
+Option A -- **Download from the console**: Browse [www.bithuman.ai](https://www.bithuman.ai) > Explore
 
 Option B -- **Generate via API**: Use the [api/](../api/) scripts to create a new agent and download its model:
 ```bash
@@ -200,7 +200,7 @@ curl -s http://localhost:4202 | head -5
 ## Troubleshooting
 
 **No .imx model files?**
-Place at least one `.imx` file in the `./models/` directory. Download from [www.bithuman.ai](https://www.bithuman.ai) > Community, or generate via `../api/generation.py`.
+Place at least one `.imx` file in the `./models/` directory. Download from [www.bithuman.ai](https://www.bithuman.ai) > Explore, or generate via `../api/generation.py`.
 
 **Model path wrong?**
 The Docker stack mounts `./models/` to `/imx-models` inside the container. The agent auto-discovers `.imx` files in that directory.

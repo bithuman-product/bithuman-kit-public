@@ -42,7 +42,9 @@ def get_dynamics(agent_id: str):
     data = resp.json()
 
     if not data.get("success"):
-        print(f"Error: {data.get('message', 'Unknown error')}")
+        error = data.get("error", {})
+        msg = error.get("message", data.get("message", "Unknown error")) if isinstance(error, dict) else str(error)
+        print(f"Error: {msg}")
         return data
 
     info = data["data"]
@@ -80,7 +82,9 @@ def generate_dynamics(agent_id: str, duration: int = 5, model: str = "seedance")
         print(f"Dynamics generation started for {agent_id}")
         print(f"  Duration: {duration}s, Model: {model}")
     else:
-        print(f"Error: {data.get('message', 'Unknown error')}")
+        error = data.get("error", {})
+        msg = error.get("message", data.get("message", "Unknown error")) if isinstance(error, dict) else str(error)
+        print(f"Error: {msg}")
 
     return data
 
