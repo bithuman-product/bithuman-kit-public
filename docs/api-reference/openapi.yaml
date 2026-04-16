@@ -474,8 +474,6 @@ paths:
                         type: number
                       topup_credits:
                         type: number
-                      is_enterprise:
-                        type: boolean
                       minutes_estimate:
                         type: object
         "401":
@@ -549,9 +547,9 @@ paths:
                   description: Gesture duration in seconds.
                 model:
                   type: string
-                  enum: [seedance, kling]
-                  default: seedance
-                  description: Generation model.
+                  enum: [quality, speed, auto]
+                  default: quality
+                  description: Generation model variant.
       responses:
         "200":
           description: Dynamics generation started

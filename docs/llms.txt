@@ -13,7 +13,7 @@ character that speaks. The platform provides:
 - **Python SDK** (`pip install bithuman`) — local CPU avatar rendering
 - **LiveKit Plugin** (`pip install livekit-plugins-bithuman`) — real-time WebRTC avatar sessions
 - **REST API** (api.bithuman.ai) — agent generation, management, dynamics, file upload
-- **GPU Docker Container** (`sgubithuman/expression-avatar`) — self-hosted GPU inference with any face image
+- **GPU Docker Container** — self-hosted GPU inference with any face image
 - **Embed** — iframe-based website embedding with token auth
 
 ## Getting Started

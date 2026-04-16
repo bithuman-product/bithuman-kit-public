@@ -2077,7 +2077,7 @@ Your Agent (LiveKit)
       │  POST /launch
       │  { livekit_url, livekit_token, room_name, avatar_image }
       ▼
-expression-avatar container
+bitHuman GPU container
       │
       ├─ Joins LiveKit room as video publisher
       ├─ Receives audio from agent via data stream
@@ -2104,7 +2104,7 @@ expression-avatar container
 Model weights download automatically on first run — just provide your API secret:
 
 ```bash
-# 1. Pull the image (includes wav2vec2 audio encoder, ~360 MB)
+# 1. Pull the image (~360 MB)
 docker pull docker.io/sgubithuman/expression-avatar:latest
 
 # 2. Run — proprietary weights (~4.7 GB) download automatically on first start
@@ -2118,7 +2118,7 @@ docker run --gpus all -p 8089:8089 \
 # 3. Wait for startup (first run: ~3 min download + ~48s GPU compilation)
 #    Subsequent starts: ~48s (weights already cached in the named volume)
 curl http://localhost:8089/health
-# {"status": "healthy", "service": "expression-avatar", "active_sessions": 0, "max_sessions": 8}
+# {"status": "healthy", "active_sessions": 0, "max_sessions": 8}
 ```
 
 The `-v bithuman-models:/data/models` named volume caches the downloaded weights so you only pay the download cost once.
@@ -2274,7 +2274,7 @@ Lightweight health check. Always returns 200 once the container is running (even
 ```json
 {
   "status": "healthy",
-  "service": "expression-avatar",
+  
   "active_sessions": 2,
   "max_sessions": 8
 }
@@ -2368,14 +2368,6 @@ curl -X POST "http://localhost:8089/benchmark?iterations=10"
   "frames_per_generate": 24,
   "avg_ms": 79.3,
   "fps": 302.6,
-  "stages": {
-    "dit_ms": 41.2,
-    "vae_decode_ms": 13.1,
-    "vae_encode_ms": 8.5,
-    "color_correct_ms": 6.1,
-    "postprocess_ms": 2.8,
-    "audio_ms": 7.1
-  },
   "vram_gb": 6.2,
   "gpu": "NVIDIA GPU"
 }
@@ -2402,8 +2394,8 @@ open frame.jpg
 | `MAX_SESSIONS` | No | `8` | Max concurrent avatar sessions |
 | `CUDA_VISIBLE_DEVICES` | No | all GPUs | Restrict to specific GPU (e.g. `0`) |
 | `BITHUMAN_API_URL` | No | `https://api.bithuman.ai` | Override API endpoint (for testing) |
-| `FAST_DECODER_CONFIG` | No | — | Path to fast decoder config JSON (optional speedup) |
-| `FAST_DECODER_CHECKPOINT` | No | — | Path to fast decoder weights (optional speedup) |
+| `
+| `
 
 
 Without `BITHUMAN_API_SECRET`, avatar sessions will run but usage will not be tracked or billed. This is not permitted for production use.
@@ -2450,7 +2442,7 @@ docker run --gpus all -p 8089:8089 --restart always \
 | `/launch` returns `503 at_capacity` | All session slots in use; increase `MAX_SESSIONS` or scale horizontally |
 | Startup takes >2 minutes (after download) | GPU compilation runs once per container — subsequent starts reuse compiled cache |
 | Out of memory | Use a GPU with ≥8 GB VRAM; reduce `MAX_SESSIONS` if needed |
-| Billing not working | Verify `BITHUMAN_API_SECRET` is set; check logs for `[HEARTBEAT]` messages |
+| Billing not working | Verify `BITHUMAN_API_SECRET` is set; ensure BITHUMAN_API_SECRET is set and valid |
 | Avatar image not showing | Check `/test-frame` — if it returns a valid JPEG, image encoding is working |
 
 ---
@@ -3758,10 +3750,10 @@ Retrieve detailed information about an agent by its code identifier.
     "created_at": "2025-08-01T13:58:51.907177+00:00",
     "updated_at": "2025-08-01T09:59:15.159901+00:00",
     "system_prompt": "You are a friendly AI assistant",
-    "image_url": "https://storage.supabase.co/image.jpg",
-    "video_url": "https://storage.supabase.co/video.mp4",
+    "image_url": "https://cdn.bithuman.ai/assets/image.jpg",
+    "video_url": "https://cdn.bithuman.ai/assets/video.mp4",
     "name": "My Agent",
-    "model_url": "https://storage.supabase.co/model.imx"
+    "model_url": "https://cdn.bithuman.ai/assets/model.imx"
   }
 }
 ```
@@ -4150,7 +4142,7 @@ print(response.json())
   "success": true,
   "message": "File uploaded successfully",
   "data": {
-    "file_url": "https://storage.supabase.co/assets/docs/20250115_103000_abc12345.pdf",
+    "file_url": "https://cdn.bithuman.ai/assets/assets/docs/20250115_103000_abc12345.pdf",
     "original_source": "https://example.com/document.pdf",
     "file_type": "auto",
     "file_size": 1024000,
@@ -4250,7 +4242,7 @@ Generate dynamic movements and animations for an agent. Returns immediately with
 | `agent_id` | string | Yes | — | Agent ID to generate dynamics for |
 | `image_url` | string | No | (from agent) | Agent image URL (fetched from agent data if not provided) |
 | `duration` | number | No | `5` | Duration of each motion in seconds |
-| `model` | string | No | `seedance` | Model to use (`seedance`, `kling`) |
+| `model` | string | No | `quality` | Generation model variant (`quality`, `speed`, `auto`) |
 
 **Response**
 
@@ -4275,7 +4267,7 @@ response = requests.post(
     json={
         "agent_id": "A91XMB7113",
         "duration": 5,
-        "model": "seedance"
+        "model": "quality"
     }
 )
 print(response.json())
@@ -4297,13 +4289,13 @@ Retrieve the current dynamics configuration and available gestures for an agent.
 {
   "success": true,
   "data": {
-    "url": "https://storage.supabase.co/dynamics-model.imx",
+    "url": "https://cdn.bithuman.ai/assets/dynamics-model.imx",
     "status": "ready",
     "agent_id": "A91XMB7113",
     "gestures": {
-      "mini_wave_hello": "https://storage.supabase.co/mini_wave_hello.mp4",
-      "talk_head_nod_subtle": "https://storage.supabase.co/talk_head_nod_subtle.mp4",
-      "blow_kiss_heart": "https://storage.supabase.co/blow_kiss_heart.mp4"
+      "mini_wave_hello": "https://cdn.bithuman.ai/assets/mini_wave_hello.mp4",
+      "talk_head_nod_subtle": "https://cdn.bithuman.ai/assets/talk_head_nod_subtle.mp4",
+      "blow_kiss_heart": "https://cdn.bithuman.ai/assets/blow_kiss_heart.mp4"
     }
   }
 }
@@ -4426,8 +4418,8 @@ The exact gesture names depend on what was generated. Use `GET /v1/dynamics/{age
 - `5-10 seconds`: Extended animations
 
 **Model Options:**
-- `seedance`: High-quality motion generation (default)
-- `kling`: Alternative motion model
+- `quality`: High-quality motion generation (default)
+- `speed`: Faster alternative motion model
 
 ---
 
@@ -4461,7 +4453,7 @@ while True:
 resp = requests.post(
     "https://api.bithuman.ai/v1/dynamics/generate",
     headers=headers,
-    json={"agent_id": agent_id, "duration": 5, "model": "seedance"}
+    json={"agent_id": agent_id, "duration": 5, "model": "quality"}
 )
 print("Dynamics generation started:", resp.json())
 
@@ -4701,7 +4693,7 @@ else:
 
 ## GPU Container Errors
 
-The self-hosted expression-avatar container returns its own error responses:
+The self-hosted GPU container returns its own error responses:
 
 | Endpoint | Error | Resolution |
 |----------|-------|------------|

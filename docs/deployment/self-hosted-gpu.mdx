@@ -1,6 +1,6 @@
 ---
 title: "Self-Hosted GPU: Expression Avatar Docker Container"
-description: "Deploy the bitHuman expression-avatar GPU container. Any face image, 250+ FPS, 8 concurrent sessions per GPU. Docker setup, HTTP API reference, and troubleshooting."
+description: "Deploy the bitHuman GPU avatar container on your own infrastructure. Any face image, real-time rendering, multiple concurrent sessions. Docker setup, HTTP API reference, and troubleshooting."
 icon: "gpu-card"
 ---
 
@@ -27,7 +27,7 @@ Your Agent (LiveKit)
       │  POST /launch
       │  { livekit_url, livekit_token, room_name, avatar_image }
       ▼
-expression-avatar container
+bitHuman GPU container
       │
       ├─ Joins LiveKit room as video publisher
       ├─ Receives audio from agent via data stream
@@ -54,7 +54,7 @@ expression-avatar container
 Model weights download automatically on first run — just provide your API secret:
 
 ```bash
-# 1. Pull the image (includes wav2vec2 audio encoder, ~360 MB)
+# 1. Pull the image (~360 MB)
 docker pull docker.io/sgubithuman/expression-avatar:latest
 
 # 2. Run — proprietary weights (~4.7 GB) download automatically on first start
@@ -68,7 +68,7 @@ docker run --gpus all -p 8089:8089 \
 # 3. Wait for startup (first run: ~3 min download + ~48s GPU compilation)
 #    Subsequent starts: ~48s (weights already cached in the named volume)
 curl http://localhost:8089/health
-# {"status": "healthy", "service": "expression-avatar", "active_sessions": 0, "max_sessions": 8}
+# {"status": "healthy", "active_sessions": 0, "max_sessions": 8}
 ```
 
 The `-v bithuman-models:/data/models` named volume caches the downloaded weights so you only pay the download cost once.
@@ -224,7 +224,6 @@ Lightweight health check. Always returns 200 once the container is running (even
 ```json
 {
   "status": "healthy",
-  "service": "expression-avatar",
   "active_sessions": 2,
   "max_sessions": 8
 }
@@ -318,14 +317,6 @@ curl -X POST "http://localhost:8089/benchmark?iterations=10"
   "frames_per_generate": 24,
   "avg_ms": 79.3,
   "fps": 302.6,
-  "stages": {
-    "dit_ms": 41.2,
-    "vae_decode_ms": 13.1,
-    "vae_encode_ms": 8.5,
-    "color_correct_ms": 6.1,
-    "postprocess_ms": 2.8,
-    "audio_ms": 7.1
-  },
   "vram_gb": 6.2,
   "gpu": "NVIDIA GPU"
 }
@@ -351,9 +342,6 @@ open frame.jpg
 | `BITHUMAN_API_SECRET` | Yes | — | API secret for billing and weight download |
 | `MAX_SESSIONS` | No | `8` | Max concurrent avatar sessions |
 | `CUDA_VISIBLE_DEVICES` | No | all GPUs | Restrict to specific GPU (e.g. `0`) |
-| `BITHUMAN_API_URL` | No | `https://api.bithuman.ai` | Override API endpoint (for testing) |
-| `FAST_DECODER_CONFIG` | No | — | Path to fast decoder config JSON (optional speedup) |
-| `FAST_DECODER_CHECKPOINT` | No | — | Path to fast decoder weights (optional speedup) |
 
 <Warning>
 Without `BITHUMAN_API_SECRET`, avatar sessions will run but usage will not be tracked or billed. This is not permitted for production use.
@@ -395,12 +383,12 @@ docker run --gpus all -p 8089:8089 --restart always \
 | First start takes >5 minutes | Normal — weights are downloading (~4.7 GB). Check logs for download progress. |
 | Download fails with 401 | Verify `BITHUMAN_API_SECRET` is set and valid |
 | Download fails with connection error | Check outbound internet access from the container |
-| `/health` returns connection refused | Container still initializing — wait for `PREWARM: Pipeline loaded` in logs |
+| `/health` returns connection refused | Container still initializing — check `docker logs <id>` for startup progress |
 | `/launch` returns `503 not_ready` | Model still loading — poll `/ready` until `model_ready: true` |
 | `/launch` returns `503 at_capacity` | All session slots in use; increase `MAX_SESSIONS` or scale horizontally |
 | Startup takes >2 minutes (after download) | GPU compilation runs once per container — subsequent starts reuse compiled cache |
 | Out of memory | Use a GPU with ≥8 GB VRAM; reduce `MAX_SESSIONS` if needed |
-| Billing not working | Verify `BITHUMAN_API_SECRET` is set; check logs for `[HEARTBEAT]` messages |
+| Billing not working | Verify `BITHUMAN_API_SECRET` is set and valid |
 | Avatar image not showing | Check `/test-frame` — if it returns a valid JPEG, image encoding is working |
 
 ---

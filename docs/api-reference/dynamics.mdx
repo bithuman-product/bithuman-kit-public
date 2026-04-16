@@ -19,7 +19,7 @@ Generate dynamic movements and animations for an agent. Returns immediately with
 | `agent_id` | string | Yes | — | Agent ID to generate dynamics for |
 | `image_url` | string | No | (from agent) | Agent image URL (fetched from agent data if not provided) |
 | `duration` | number | No | `5` | Duration of each motion in seconds |
-| `model` | string | No | `seedance` | Model to use (`seedance`, `kling`) |
+| `model` | string | No | `quality` | Generation model variant (`quality`, `speed`, `auto`) |
 
 **Response**
 
@@ -44,7 +44,7 @@ response = requests.post(
     json={
         "agent_id": "A91XMB7113",
         "duration": 5,
-        "model": "seedance"
+        "model": "quality"
     }
 )
 print(response.json())
@@ -66,13 +66,13 @@ Retrieve the current dynamics configuration and available gestures for an agent.
 {
   "success": true,
   "data": {
-    "url": "https://storage.supabase.co/dynamics-model.imx",
+    "url": "https://cdn.bithuman.ai/assets/dynamics-model.imx",
     "status": "ready",
     "agent_id": "A91XMB7113",
     "gestures": {
-      "mini_wave_hello": "https://storage.supabase.co/mini_wave_hello.mp4",
-      "talk_head_nod_subtle": "https://storage.supabase.co/talk_head_nod_subtle.mp4",
-      "blow_kiss_heart": "https://storage.supabase.co/blow_kiss_heart.mp4"
+      "mini_wave_hello": "https://cdn.bithuman.ai/assets/mini_wave_hello.mp4",
+      "talk_head_nod_subtle": "https://cdn.bithuman.ai/assets/talk_head_nod_subtle.mp4",
+      "blow_kiss_heart": "https://cdn.bithuman.ai/assets/blow_kiss_heart.mp4"
     }
   }
 }
@@ -130,9 +130,6 @@ Update dynamics configuration for an agent. After a successful update, movements
 |-----------|------|----------|-------------|
 | `dynamics` | object | Yes | Dynamics configuration to merge with existing data |
 | `dynamics.enabled` | boolean | No | Enable or disable dynamics for this agent |
-| `dynamics.batch_results` | object | No | Map of gesture names to video generation results |
-| `dynamics.result` | object | No | Result model path and hash (set when dynamics generation completes) |
-| `dynamics.talking` | object | No | Default talking model path and hash (used when dynamics are disabled) |
 | `toggle_enabled` | boolean | No | `true` to switch to dynamics model, `false` to restore default talking model |
 
 **Example: Enable dynamics after generation**
@@ -195,8 +192,9 @@ The exact gesture names depend on what was generated. Use `GET /v1/dynamics/{age
 - `5-10 seconds`: Extended animations
 
 **Model Options:**
-- `seedance`: High-quality motion generation (default)
-- `kling`: Alternative motion model
+- `quality`: High-quality motion generation (default)
+- `speed`: Faster alternative motion model
+- `auto`: Platform selects the best model for the input
 
 ---
 
@@ -230,7 +228,7 @@ while True:
 resp = requests.post(
     "https://api.bithuman.ai/v1/dynamics/generate",
     headers=headers,
-    json={"agent_id": agent_id, "duration": 5, "model": "seedance"}
+    json={"agent_id": agent_id, "duration": 5, "model": "quality"}
 )
 print("Dynamics generation started:", resp.json())
 
