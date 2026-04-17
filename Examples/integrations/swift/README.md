@@ -35,7 +35,22 @@ cp path/to/halo/Sources/bitHuman/Resources/default_ref_latent.npy \
 
 The weight-download pipeline is automated in Halo but currently manual for SDK-only consumers. A future SDK release adds `Bithuman.downloadWeights(progress:)`.
 
-## 2. Build + run
+## 2. (Optional) Enable billing / heartbeat
+
+The example above runs the SDK **unmetered** — great for local exploration, not allowed for production use. Production apps call `Bithuman.create(paths:apiSecret:)` instead, passing an API secret you get at [bithuman.ai → Developer → API Keys](https://www.bithuman.ai/#developer).
+
+```swift
+let result = try await Bithuman.create(
+    paths: paths,
+    apiSecret: ProcessInfo.processInfo.environment["BITHUMAN_API_SECRET"]!
+)
+```
+
+Billing matches the self-hosted Expression GPU container: **2 credits per minute**, metered by a background heartbeat that pings `api.bithuman.ai/v1/runtime-tokens/request` every 60 s. On `402 Payment Required` or `403 Account Suspended` the SDK flags the session fatal and subsequent `pushAudio` calls throw `BithumanAuthError`.
+
+Check `await bithuman.billingError` at any time to surface a "top up your account" UI affordance.
+
+## 3. Build + run
 
 ```bash
 cd integrations/swift
@@ -73,10 +88,11 @@ Open them side-by-side to verify the lip-sync.
 ## What the code shows
 
 1. **`ModelPaths.resolvingDefaults(refLatent:)`** — convenience initializer that validates the four weight files exist at their standard filenames inside the default cache directory and returns nil otherwise.
-2. **`Bithuman.create(paths:)`** — one-call bootstrap that replaces the previous three-step `PipelineBox()` + `PipelineOps.load(box:paths:)` + `Bithuman(pipelineBox:)` dance.
+2. **`Bithuman.create(paths:)`** — one-call bootstrap that replaces the previous three-step `PipelineBox()` + `PipelineOps.load(box:paths:)` + `Bithuman(pipelineBox:)` dance. The metered variant `Bithuman.create(paths:apiSecret:)` wires the billing heartbeat on top.
 3. **Audio push + chunk drain loop** — the core streaming pattern. In a real app a 25 FPS display timer drives the poll; here we just sleep 40 ms and try again.
 4. **`bithuman.snapshot`** + **`chunkQueueCount`** — nonisolated status reads used to detect when all pushed audio has been rendered.
 5. **Lifecycle signals** — `flush`, `shutdown`. `interrupt` is not exercised here (no mid-stream cutoff in a synthetic scenario).
+6. **Billing state (when `apiSecret` is set)** — `await bithuman.billingError` returns a typed `BithumanAuthError` on HTTP 402 / 403, nil while healthy. `pushAudio` throws the same error so a poll-before-push pattern isn't required.
 
 ## What the code deliberately skips
 

@@ -93,7 +93,7 @@ struct BithumanSwiftExample {
 
         print("")
         print("→ Pushing \(secondsOfAudio)s of synthetic audio")
-        await bithuman.pushAudio(audio24k: samples24k, audio16k: samples16k)
+        try await bithuman.pushAudio(audio24k: samples24k, audio16k: samples16k)
         await bithuman.flush()
 
         // Drain the chunk queue. With the current polling API the
