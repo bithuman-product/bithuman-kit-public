@@ -31,7 +31,6 @@ Four combinations of model type and deployment mode.
 | Example | Description |
 |---------|-------------|
 | [integrations/java/](integrations/java/) | Java WebSocket client for streaming avatar frames |
-| [integrations/swift/](integrations/swift/) | Native Swift SDK on macOS (Apple Silicon M3+) — audio in, video out |
 | [integrations/nextjs-ui/](integrations/nextjs-ui/) | Drop-in Next.js web interface for LiveKit rooms |
 | [integrations/web-ui/](integrations/web-ui/) | Gradio browser UI with FastRTC |
 | [integrations/macos-offline/](integrations/macos-offline/) | 100% offline macOS with Ollama + Apple Speech |
