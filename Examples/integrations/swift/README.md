@@ -4,7 +4,7 @@ An end-to-end demo of [`bithuman-product/bithuman-expression-swift`](https://git
 
 **What the example is NOT:** a real UI. Real apps feed frames into `CALayer` or `AVSampleBufferDisplayLayer` and audio into `AVAudioEngine`. This writes to disk so you can inspect the output in Finder.
 
-For a fully-integrated reference app, see [**bitHuman Halo**](https://github.com/bithuman-product/halo) — the first app built on this SDK.
+For a fully-integrated reference app, see [**bitHuman Halo**](https://github.com/bithuman-product/bithuman-halo-macos) — the first app built on this SDK.
 
 ## Requirements
 

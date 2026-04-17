@@ -39,7 +39,7 @@ Four combinations of model type and deployment mode.
 ## Quick Start
 
 ```bash
-git clone https://github.com/bithuman-product/examples.git
+git clone https://github.com/bithuman-product/bithuman-examples.git
 cd examples
 
 # Pick an example directory and follow its README
