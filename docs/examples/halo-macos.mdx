@@ -1,7 +1,7 @@
 ---
 title: "bitHuman Halo — Local AI Desktop Companion for macOS"
 sidebarTitle: "Halo Desktop App"
-description: "A floating, lip-synced AI avatar that lives on your Mac. Local STT + LLM + TTS + avatar — no cloud, audio never leaves your machine. Download the signed DMG for Apple Silicon (M5+)."
+description: "A floating, lip-synced AI avatar that lives on your Mac. Local STT + LLM + TTS + avatar — no cloud, audio never leaves your machine. Download the signed DMG for Apple Silicon (M3+)."
 keywords:
   - bitHuman Halo
   - AI desktop companion
@@ -37,9 +37,9 @@ icon: "sparkles"
 
 <Steps>
   <Step title="Check your Mac">
-    Halo requires **macOS 14+**, an **Apple M5 or later**, and 16 GB RAM. ~5 GB free disk.
+    Halo requires **macOS 14+**, an **Apple M3 or later (M5+ recommended)**, and 16 GB RAM. ~5 GB free disk.
 
-    The avatar's animator needs M5-class GPU memory bandwidth to sustain 25 FPS — M1 and M2 are not supported.
+    The avatar runs on Apple Silicon M3 or later, with M5+ recommended for the smoothest experience. M1 and M2 are not supported.
   </Step>
 
   <Step title="Download the DMG">
@@ -147,7 +147,7 @@ Halo is a reference application. The animation pipeline that powers Halo is avai
 |---|---|
 | Gatekeeper warns about the app | You downloaded an unsigned build — re-download from the [signed DMG link above](#install) |
 | App launches but avatar never renders | Weights still downloading — watch the boot status pills. First launch pulls ~3.7 GB |
-| "This Mac isn't supported" on an M1 / M2 | Expression animator needs M5+ memory bandwidth. Halo checks this at launch; there's no workaround |
+| "This Mac isn't supported" on an M1 / M2 | Expression animator needs M3+ memory bandwidth. Halo checks this at launch; there's no workaround |
 | Voice pipeline stalls after ~minutes of silence | Restart the app — microphone buffer has pathological states on some third-party audio devices |
 | Auto-update didn't trigger | Open **About** → **Check for updates** to trigger manually |
 
@@ -171,7 +171,7 @@ Full privacy policy: **[bithuman.ai/halo/privacy](https://bithuman.ai/halo/priva
     Same Expression pipeline, called directly from Python. Vanilla example on GitHub.
   </Card>
   <Card title="Python SDK on PyPI" icon="python" href="https://pypi.org/project/bithuman/">
-    `pip install bithuman` — one API, runs on-device on macOS M5+ or in-process on any CPU.
+    `pip install bithuman` — one API, runs on-device on macOS M3+ or in-process on any CPU.
   </Card>
   <Card title="Examples repo" icon="github" href="https://github.com/bithuman-product/bithuman-examples">
     Working examples for every deployment mode — cloud, self-hosted GPU, Apple Silicon, Raspberry Pi.
