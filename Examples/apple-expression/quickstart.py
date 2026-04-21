@@ -21,7 +21,9 @@ Optional: override the avatar face at load time with a portrait image.
 import argparse
 import asyncio
 import os
+import shutil
 import subprocess
+import sys
 import wave
 
 import cv2
@@ -29,6 +31,28 @@ import numpy as np
 
 from bithuman import AsyncBithuman
 from bithuman.audio import float32_to_int16, load_audio
+
+
+def _require_ffmpeg() -> None:
+    """Fail fast with a friendly message when ffmpeg is missing.
+
+    The default macOS install doesn't ship ffmpeg, and the subprocess
+    failure that opencv/our mux step emits otherwise is cryptic.
+    """
+    if shutil.which("ffmpeg") is None:
+        print(
+            "\nffmpeg is not on your PATH.\n"
+            "\n"
+            "This demo muxes the rendered frames with the pushed audio into an\n"
+            "mp4 and uses ffmpeg for that step. Install it once:\n"
+            "\n"
+            "    brew install ffmpeg        # macOS (Homebrew)\n"
+            "    sudo apt install ffmpeg    # Debian / Ubuntu\n"
+            "\n"
+            "Then re-run this command.\n",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
 
 async def generate_video(
@@ -114,6 +138,8 @@ def main() -> None:
 
     if not args.api_secret:
         raise SystemExit("set BITHUMAN_API_SECRET or pass --api-secret")
+
+    _require_ffmpeg()
 
     asyncio.run(generate_video(
         model_path=args.model,
