@@ -37,35 +37,53 @@ The SDK includes `opencv-python-headless` automatically. Do **not** install `ope
 You need a `.wav` audio file to drive the avatar. A sample `speech.wav` is included in each
 [example directory](https://github.com/bithuman-product/bithuman-examples), or generate your own with any TTS service.
 
+### Option A — CLI (fastest, no coding)
+
+```bash
+export BITHUMAN_API_SECRET=your_api_secret
+bithuman generate avatar.imx --audio speech.wav --output demo.mp4 --key "$BITHUMAN_API_SECRET"
+```
+
+Open `demo.mp4` to see your avatar talking.
+
+<Note>
+On PyPI ≤ 1.10.5, pass `--key` explicitly as shown. From 1.10.6 onward `bithuman generate` also reads `$BITHUMAN_API_SECRET` automatically.
+</Note>
+
+### Option B — Python
+
 ```python
-import asyncio
-import cv2
+import asyncio, os
 from bithuman import AsyncBithuman
 from bithuman.audio import load_audio, float32_to_int16
 
 async def main():
-    # Initialize
     runtime = await AsyncBithuman.create(
         model_path="avatar.imx",
-        api_secret="your_api_secret"
+        api_secret=os.environ["BITHUMAN_API_SECRET"],
     )
     await runtime.start()
 
-    # Load and push audio
-    audio, sr = load_audio("speech.wav")
-    await runtime.push_audio(
-        float32_to_int16(audio).tobytes(), sr
-    )
+    pcm, sr = load_audio("speech.wav")
+    pcm = float32_to_int16(pcm)
+    chunk = sr // 25                          # one chunk per video frame
+    for i in range(0, len(pcm), chunk):
+        await runtime.push_audio(pcm[i : i + chunk].tobytes(), sr)
     await runtime.flush()
 
-    # Display animated frames
-    async for frame in runtime.run():
-        if frame.has_image:
-            cv2.imshow("Avatar", frame.bgr_image)  # numpy (H, W, 3)
-            cv2.waitKey(1)
+    try:
+        async for frame in runtime.run():
+            if frame.has_image:
+                image = frame.bgr_image        # numpy (H, W, 3) uint8
+            if frame.end_of_speech:
+                break
+    finally:
+        await runtime.stop()
 
 asyncio.run(main())
 ```
+
+Want to display the frames live? See [Audio Clip](/examples/audio-clip) for the OpenCV + speaker playback pattern.
 
 [Full working example on GitHub](https://github.com/bithuman-product/bithuman-examples/tree/main/essence-selfhosted)
 
