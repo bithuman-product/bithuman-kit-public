@@ -1,11 +1,11 @@
 ---
 title: "Expression Avatar on macOS (Apple Silicon, On-Device)"
 sidebarTitle: "Expression on macOS"
-description: "Run the bitHuman Expression model on-device on Apple Silicon (M3+) via the bundled Swift runtime. Any portrait, 25 FPS lip-sync, no GPU, no server. Step-by-step Python SDK guide."
+description: "Run the bitHuman Expression model on-device on Apple Silicon (M5+) via the bundled Swift runtime. Any portrait, 25 FPS lip-sync, no GPU, no server. Step-by-step Python SDK guide."
 keywords:
   - bitHuman Expression
   - on-device avatar
-  - Apple Silicon M3
+  - Apple Silicon M5
   - lip sync macOS
   - Swift runtime
   - bithuman-expression-daemon
@@ -17,7 +17,7 @@ icon: "apple"
 Run a custom-face **Expression** avatar entirely on your Mac — no GPU, no cloud, no Docker. The Python SDK transparently dispatches to a bundled Swift subprocess that drives the animator, face encoder, and face renderer on Apple's Neural Engine + GPU.
 
 <Info>
-  **Requires an M3 or later Mac.** The animator needs M3-class GPU memory bandwidth to sustain 25 FPS. M1/M2 raises `ExpressionModelNotSupported` with install guidance.
+  **Requires an M5 or later Mac.** The animator needs M5-class GPU memory bandwidth to sustain 25 FPS. M1/M2 raises `ExpressionModelNotSupported` with install guidance.
 </Info>
 
 ## Which runtime do you get?
@@ -28,7 +28,7 @@ One `pip install bithuman` — three possible runtimes, selected automatically b
 flowchart TD
     A[AsyncBithuman.create\nmodel_path=*.imx] --> B{Model type?}
     B -->|Essence| C[Python in-process\nany CPU, any OS]
-    B -->|Expression| D{Apple Silicon M3+?}
+    B -->|Expression| D{Apple Silicon M5+?}
     D -->|Yes, macOS 14+| E[Swift subprocess\nbithuman-expression-daemon\nMLX + CoreML on-device]
     D -->|No| F[ExpressionModelNotSupported\n→ use self-hosted GPU on Linux + NVIDIA]
 
@@ -37,7 +37,7 @@ flowchart TD
     style F fill:#ffebee,stroke:#c62828,color:#000
 ```
 
-This page covers the middle path — Expression on an M3+ Mac.
+This page covers the middle path — Expression on an M5+ Mac.
 
 ## What you build
 
@@ -52,7 +52,7 @@ expression.imx + speech.wav ──► quickstart.py ──► out.mp4  (25 FPS, 
 | | |
 |---|---|
 | macOS | 14 or later |
-| Chip | Apple Silicon, **M3 or later** (M1/M2 unsupported) |
+| Chip | Apple Silicon, **M5 or later** (M1/M2 unsupported) |
 | RAM | 16 GB |
 | Disk | ~5 GB free (model weights) |
 | Python | 3.9 – 3.14 |
@@ -157,7 +157,7 @@ Two parallel example projects — pick the one that matches your app:
 
 <CardGroup cols={2}>
   <Card title="Python (recommended)" icon="python" href="https://github.com/bithuman-product/bithuman-examples/tree/main/apple-expression">
-    `pip install bithuman` + `bithuman demo`. Auto-dispatches to the Swift daemon on macOS M3+, or to the in-process Essence runtime everywhere else. What this page walks through.
+    `pip install bithuman` + `bithuman demo`. Auto-dispatches to the Swift daemon on macOS M5+, or to the in-process Essence runtime everywhere else. What this page walks through.
   </Card>
   <Card title="Swift" icon="swift">
     Native `BithumanAvatar` SwiftPM library + AVAssetWriter. Ships with the private Swift SDK repo ([contact us](https://bithuman.ai) for access). Same `.imx` format, same API shape, no ffmpeg dependency.
@@ -238,7 +238,7 @@ Cache a portrait once by saving the encoded `.npy` to disk and reusing it across
 
 | Symptom | Cause + fix |
 |---|---|
-| `ExpressionModelNotSupported` on an M1/M2 Mac | Animator requires M3+ memory bandwidth. Use an M3 or later, or the [self-hosted GPU deployment](/deployment/self-hosted-gpu) on Linux + NVIDIA. |
+| `ExpressionModelNotSupported` on an M1/M2 Mac | Animator requires M5+ memory bandwidth. Use an M5 or later, or the [self-hosted GPU deployment](/deployment/self-hosted-gpu) on Linux + NVIDIA. |
 | `ExpressionModelNotSupported` on Intel / Linux / Windows | No local path — use the [self-hosted GPU deployment](/deployment/self-hosted-gpu). |
 | Error mentioning `pre-encoded identity spatial dim N ≠ pipeline dim M` | The cached `.npy` was encoded for a different renderer resolution than the one in your `.imx`. Re-encode from the source portrait. |
 | First-frame latency > 1.3 s | One-time warm-up is ≤ 1.3 s (full receptive field) or ≤ 450 ms (partial window). Anything longer usually means another MLX workload is contending for the GPU. |
