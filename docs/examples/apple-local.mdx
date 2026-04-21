@@ -15,6 +15,10 @@ icon: "apple"
   Looking for the **on-device Expression** avatar (custom face, 25 FPS, no GPU)? See [Expression on macOS](/examples/apple-expression). This page covers the local *voice* stack (STT/TTS/VAD) paired with an Essence avatar.
 </Tip>
 
+<Warning>
+  **Preview — private distribution.** The `bithuman-voice` wheel referenced below is not currently published on PyPI. Reach out on [Discord](https://discord.gg/ES953n7bPA) or through [bitHuman support](https://bithuman.ai) to request access to the voice pipeline.
+</Warning>
+
 Full privacy — speech never leaves your Mac.
 
 ## Quick Start
@@ -25,8 +29,9 @@ Full privacy — speech never leaves your Mac.
     - Microphone permissions
   </Step>
   <Step title="Install voice service">
+    Request the `bithuman-voice` wheel via the channels above, then:
     ```bash
-    pip install https://github.com/bithuman-product/bithuman-examples/releases/download/v0.1/bithuman_voice-1.3.2-py3-none-any.whl
+    pip install bithuman_voice-1.3.2-py3-none-any.whl
     ```
   </Step>
   <Step title="Start voice service">
@@ -109,7 +114,8 @@ For 100% local operation with no internet required, use the complete Docker setu
 git clone https://github.com/bithuman-product/bithuman-examples.git
 cd bithuman-examples/integrations/macos-offline
 
-pip install https://github.com/bithuman-product/bithuman-examples/releases/download/v0.1/bithuman_voice-1.3.2-py3-none-any.whl
+# Request the bithuman-voice wheel via Discord / bitHuman support, then:
+pip install bithuman_voice-1.3.2-py3-none-any.whl
 bithuman-voice serve --port 8000
 
 ollama run llama3.2:1b
