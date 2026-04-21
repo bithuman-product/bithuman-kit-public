@@ -1,10 +1,17 @@
-"""Play an audio file through a cloud-hosted bitHuman Expression (GPU) avatar.
+"""Play an audio file through a bitHuman Expression avatar.
 
-No local GPU needed. Provide any face image and the cloud renders it as a talking avatar.
+Uses the current `AsyncBithuman.create(model_path=...)` API against a
+pre-packed Expression `.imx` bundle. Pass an optional `--identity` image
+to swap the face without re-packing the bundle.
+
+Note: a dedicated cloud-GPU dispatch mode (image-in, frames-out, no
+local `.imx` required) is on the roadmap but is not yet plumbed through
+`AsyncBithuman.create()` in PyPI `bithuman`. This example uses the
+current real API.
 
 Usage:
-    python quickstart.py --avatar-image face.jpg --audio-file speech.wav
-    python quickstart.py --avatar-image https://example.com/face.jpg --audio-file speech.wav
+    python quickstart.py --model expression.imx --audio-file speech.wav
+    python quickstart.py --model expression.imx --identity face.jpg --audio-file speech.wav
 """
 
 import argparse
@@ -48,28 +55,32 @@ async def push_audio(runtime: AsyncBithuman, audio_file: str):
 
 async def main():
     parser = argparse.ArgumentParser(
-        description="bitHuman Expression Cloud -- GPU avatar from any face image"
+        description="bitHuman Expression -- avatar from a pre-packed .imx bundle"
     )
-    parser.add_argument("--avatar-image", default=os.getenv("BITHUMAN_AVATAR_IMAGE"),
-                        help="Face image: local path or URL")
+    parser.add_argument("--model", default=os.getenv("BITHUMAN_MODEL_PATH"),
+                        help="Path to an Expression .imx bundle")
+    parser.add_argument("--identity", default=os.getenv("BITHUMAN_AVATAR_IMAGE"),
+                        help="Optional face image (local path or URL) to swap the bundle's default face")
     parser.add_argument("--audio-file", required=True, help="Path to audio file")
     parser.add_argument("--api-secret", default=os.getenv("BITHUMAN_API_SECRET"))
     args = parser.parse_args()
 
-    if not args.avatar_image:
-        print("Error: Provide --avatar-image or set BITHUMAN_AVATAR_IMAGE")
-        print("Use any face photo (JPEG/PNG) -- local path or URL")
+    if not args.model:
+        print("Error: Provide --model or set BITHUMAN_MODEL_PATH")
+        print("Use a pre-packed Expression .imx bundle")
         return
     if not args.api_secret:
         print("Error: Set BITHUMAN_API_SECRET")
         return
 
-    # Cloud GPU mode: avatar_image + model="expression"
-    runtime = await AsyncBithuman.create(
-        avatar_image=args.avatar_image,
-        api_secret=args.api_secret,
-        model="expression",
-    )
+    create_kwargs = {
+        "model_path": args.model,
+        "api_secret": args.api_secret,
+    }
+    if args.identity:
+        create_kwargs["identity"] = args.identity
+
+    runtime = await AsyncBithuman.create(**create_kwargs)
 
     width, height = runtime.get_frame_size()
     cv2.namedWindow("bitHuman", cv2.WINDOW_NORMAL)

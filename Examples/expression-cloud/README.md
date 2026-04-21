@@ -15,7 +15,7 @@ No local GPU needed. Provide any face image and the cloud renders a high-fidelit
 ```bash
 # 1. Clone and enter the directory
 git clone https://github.com/bithuman-product/bithuman-examples.git
-cd examples/expression-cloud
+cd bithuman-examples/expression-cloud
 
 # 2. Create your .env file
 cp .env.example .env
