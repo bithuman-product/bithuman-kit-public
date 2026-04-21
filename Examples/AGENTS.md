@@ -34,7 +34,7 @@ bithuman-docs/                        Mintlify source for docs.bithuman.ai
 ## Authoritative docs
 
 - Product / API / deployment: [docs.bithuman.ai](https://docs.bithuman.ai) (source in [`bithuman-docs/`](bithuman-docs/))
-- Python SDK surface: [pypi.org/project/bithuman](https://pypi.org/project/bithuman/) and the [SDK repo](https://github.com/bithuman-product/bithuman-python-sdk)
+- Python SDK surface: [pypi.org/project/bithuman](https://pypi.org/project/bithuman/) (the SDK source repo is private; internal links from PyPI point at docs.bithuman.ai)
 - REST API: [`docs.bithuman.ai/api-reference/openapi.yaml`](https://docs.bithuman.ai/api-reference/openapi.yaml)
 
 Do not re-document the full API or SDK surface inside this repo. Link out.
