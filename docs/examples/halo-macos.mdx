@@ -83,7 +83,15 @@ icon: "sparkles"
 | VAE decode | Turbo-VAED | Apple Neural Engine (Core ML) |
 | Frame rendering | — | `CALayer.contents` at 25 FPS |
 
-No network calls are made during a conversation. The only network activity is a one-time weight download on first launch and periodic Sparkle update checks.
+No network calls are made during a conversation. The only network activity is a one-time weight download on first launch, periodic Sparkle update checks, and — if you choose — anonymous telemetry (see [Privacy](#privacy)).
+
+## Sign in (optional)
+
+Halo is free and fully usable without an account. Signing in lets us link your Halo usage to your existing bitHuman.ai account — handy if you want to see all your activity in one dashboard or move your settings across Macs in the future.
+
+Click **Account & Privacy…** from Halo's menu-bar icon, then **Sign in with email or Google**. A browser tab opens, Clerk handles sign-in (magic-link email, Google, Apple, GitHub, and more), and you're bounced back to Halo via a `halo://` URL — no keys to paste, no passwords to manage.
+
+No bitHuman account yet? The sign-in page offers sign-up; Halo auto-provisions a free account.
 
 ## Build from source
 
@@ -120,12 +128,16 @@ MLX Swift's Metal shaders don't compile under `swift build` — the Makefile rou
 
 ## Privacy
 
-Halo is designed for full privacy:
+Halo is designed for privacy by default:
 
 - **Audio never leaves your Mac** — STT, LLM, and TTS all run on-device
-- **No telemetry** — the app does not report usage
 - **Portraits you drop** are VAE-encoded into a local `.npy` cache; the originals stay on disk
-- **Network calls**: Sparkle auto-update check (~once / 24 h), one-time weight download
+- **Anonymous usage analytics** help us understand how Halo is used. Events are install, session start/end, 5-minute foreground heartbeat, persona change, identity swap, barge-in, link click. Payloads include app version, macOS version, Mac model, and approximate country. We **never** send audio, portraits, prompts, transcripts, or filenames. Retention is 13 months.
+- **One toggle off** in **Account & Privacy → Help improve Halo** sends *zero* telemetry. When off, the feature is fully disabled — no install ping, no heartbeat, nothing.
+- **Delete my data** button in the same panel wipes every server-side row matching this Mac in one call.
+- **Network calls**: Sparkle auto-update check (~once / 24 h), one-time weight download, optional analytics + sign-in.
+
+Full privacy policy: **[bithuman.ai/halo/privacy](https://bithuman.ai/halo/privacy)**.
 
 ## Next steps
 
