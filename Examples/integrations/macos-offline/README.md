@@ -17,8 +17,12 @@ A local deployment of bitHuman's AI visual agent running on Apple M2+/M3/M4 devi
 
 Install bitHuman's Apple STT (Speech Recognition) and TTS (Siri/Apple voices) plugin for LiveKit:
 
+> **Preview — private distribution.** The `bithuman-voice` wheel is not currently published publicly. This example won't run end-to-end without it. Reach out on [Discord](https://discord.gg/ES953n7bPA) or through [bitHuman support](https://bithuman.ai) to request access.
+
+Once you have the wheel, install it:
+
 ```bash
-pip install https://github.com/bithuman-product/bithuman-examples/releases/download/v0.1/bithuman_voice-1.3.2-py3-none-any.whl
+pip install bithuman_voice-1.3.2-py3-none-any.whl
 ```
 
 ### 2. Configure Apple Voices
