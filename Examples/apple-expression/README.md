@@ -22,35 +22,29 @@ export BITHUMAN_API_SECRET="your_secret_from_bithuman.ai"
 
 The macOS arm64 wheel ships `bithuman-expression-daemon` (the Swift subprocess the runtime spawns for Expression `.imx` files). Nothing else to install.
 
-## Run — zero-arg path
+## Run — CLI path
 
 ```bash
-bithuman demo
+bithuman demo --model expression.imx --audio speech.wav
 ```
 
-First run downloads a demo `.imx` (~3.7 GB, cached under `~/.cache/bithuman/`) and uses a bundled sample clip. Outputs `demo.mp4` (~15 s, 393 frames).
-
-Pass a portrait to change the face — encoded on load (~300 ms) and cached:
+Outputs `demo.mp4`. `--audio` defaults to a bundled sample clip if omitted. Pass `--identity face.jpg` (or a URL) to override the bundle's baked-in face — encoded once on load (~300 ms) and cached:
 
 ```bash
-bithuman demo --identity alice.jpg
-bithuman demo --identity "https://.../portrait.jpg" --output alice.mp4
+bithuman demo --model expression.imx --identity alice.jpg --output alice.mp4
+bithuman demo --model expression.imx --identity "https://.../portrait.jpg" --output galaxy.mp4
 ```
 
 See the [agent gallery](https://docs.bithuman.ai/examples/apple-expression#agent-gallery) for ready-made identity URLs.
 
-## Run — custom model + audio
+## Run — custom script path
 
-```bash
-bithuman demo --model your-model.imx --audio your-speech.wav --output out.mp4
-```
-
-Or drive the SDK directly via `quickstart.py`:
+`quickstart.py` drives the same pipeline through `AsyncBithuman.create()` directly — useful when you're about to swap audio/identity/output for your own data flow.
 
 ```bash
 pip install -r requirements.txt
-python quickstart.py --model your-model.imx --audio speech.wav --output out.mp4
-python quickstart.py --model your-model.imx --audio speech.wav --identity alice.jpg --output alice.mp4
+python quickstart.py --model expression.imx --audio speech.wav --output out.mp4
+python quickstart.py --model expression.imx --audio speech.wav --identity alice.jpg --output alice.mp4
 ```
 
 Pre-encoded `.npy` identities load instantly — useful if the same portrait is reused across sessions.
