@@ -19,7 +19,7 @@ bitHuman creates digital avatars that lip-sync to audio in real-time. Feed in au
 **Four ways to run:**
 - **Cloud** — no GPU, no model files. Just an API secret.
 - **Self-Hosted CPU** — download an `.imx` model, run on any machine.
-- **Self-Hosted GPU (Linux + NVIDIA)** — any face image, 1.3B parameter model, 250+ FPS.
+- **Self-Hosted GPU (Linux + NVIDIA)** — any face image, 1.3B parameter model, up to 250+ FPS on H100-class GPUs (lower on smaller cards).
 - **[On-Device macOS](/examples/apple-expression)** — Expression avatar running natively on Apple Silicon (M3+) via the bundled Swift runtime. No GPU, no cloud, no Docker. The same pipeline also powers [bitHuman Halo](/examples/halo-macos), our free desktop companion app.
 
 ## Quick Start
@@ -28,7 +28,7 @@ bitHuman creates digital avatars that lip-sync to audio in real-time. Feed in au
 
 ```bash Docker (Recommended)
 git clone https://github.com/bithuman-product/bithuman-examples.git
-cd examples/essence-cloud
+cd bithuman-examples/essence-cloud
 
 # Add your API keys to .env
 cp .env.example .env
@@ -135,8 +135,8 @@ Base URL: `https://api.bithuman.ai` — Auth: `api-secret` header from [Develope
 |----------|--------|-------|
 | **Linux (x86_64)** | Full Support | Production ready |
 | **Linux (ARM64)** | Full Support | Edge deployments |
-| **macOS (Apple Silicon)** | Full Support | M2+, M4 ideal |
-| **Windows** | Full Support | Via WSL |
+| **macOS (Apple Silicon)** | Full Support | Expression (on-device) requires M3+; Essence runs on any Apple Silicon |
+| **Windows (x86_64)** | Full Support | Native wheels for Python 3.9–3.14, or WSL |
 
 ## AI Agent Integration
 

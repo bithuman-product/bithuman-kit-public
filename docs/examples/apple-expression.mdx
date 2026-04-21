@@ -62,7 +62,7 @@ expression.imx + speech.wav ──► quickstart.py ──► out.mp4  (25 FPS, 
   <Step title="Get an Expression .imx">
     One `.imx` bundle holds the animator, speech encoder, face encoder, face renderer, and a baked-in default face — ~3.5 GB of shared weights.
 
-    Build one with `bithuman pack` (see the [Python SDK README](https://github.com/bithuman-product/bithuman-python-sdk#pack)) or download a pre-packed model from your dashboard.
+    Build one with `bithuman pack` (see the [Python SDK README](https://github.com/bithuman-product/bithuman-python-sdk#packing-at-different-resolutions)) or download a pre-packed model from your dashboard.
 
     <Note>
       The **same** `.imx` serves every avatar you ship. The face is parameterized separately via `identity=` — you don't re-pack a bundle per agent.
@@ -123,11 +123,14 @@ async def main():
         api_secret=os.environ["BITHUMAN_API_SECRET"],
         identity="alice.jpg",   # optional; omit to use the bundle's default face
     )
+    # pcm_float32 is your 16 kHz mono PCM buffer. Producing the
+    # buffer and displaying the frame is app-specific (e.g. record
+    # via sounddevice, render via cv2.imshow) — omitted here.
     await runtime.push_audio(pcm_float32, 16_000)
     await runtime.flush()
     async for frame in runtime.run():
         if frame.has_image:
-            display(frame.bgr_image)
+            display(frame.bgr_image)  # app-specific
         if frame.end_of_speech:
             break
     await runtime.shutdown()
