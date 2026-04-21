@@ -26,7 +26,7 @@ bithuman-docs/                        Mintlify source for docs.bithuman.ai
 
 ## Conventions
 
-- Each stack ships a `quickstart.py` (standalone), optionally an `agent.py` (LiveKit), a `docker-compose.yml`, and a `.env.example`. Keep those filenames stable — the docs link to them.
+- Every stack ships a `.env.example` + `docker-compose.yml`. Stacks that have a standalone, no-LiveKit entry point also ship a `quickstart.py`. Stacks that route through LiveKit (cloud + self-hosted GPU) ship `agent.py` instead. Keep filenames stable — the docs link to them.
 - READMEs should stay short and task-focused: prerequisites, one-command run, a short config table, troubleshooting only for failures users actually hit. Don't duplicate content across siblings — link to the canonical README.
 - Use `BITHUMAN_API_SECRET` (new style), not `BITHUMAN_RUNTIME_TOKEN`. The token flow is still supported upstream but is legacy here.
 - Don't commit large binaries. Sample audio (`speech.wav`, ~700 KB) is fine; rendered MP4s are not.

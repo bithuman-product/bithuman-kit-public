@@ -34,27 +34,12 @@ Open **http://localhost:4202** in your browser. Click to start talking.
 
 First frame arrives in 4-6 seconds. The cloud handles all GPU rendering.
 
-## Terminal Quickstart (no Docker)
+## No-Docker paths
 
-```bash
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your API secret
-```
+Cloud Expression dispatches through the LiveKit plugin (`bithuman.AvatarSession` with `model="expression"`), not standalone `AsyncBithuman`. There are two terminal-only options that don't need this stack:
 
-### Animate any face from an image
-
-A sample `speech.wav` is included in this directory. Or use your own:
-
-```bash
-# Using a local image
-python quickstart.py --avatar-image face.jpg --audio-file speech.wav
-
-# Using a URL
-python quickstart.py --avatar-image https://tmoobjxlwcwvxvjeppzq.supabase.co/storage/v1/object/public/bithuman/A74NWD9723/image_20251122_000244_372799.jpg --audio-file speech.wav
-```
-
-Press `Q` to quit.
+- **On-device on Apple Silicon (M3+)**: [`../apple-expression/`](../apple-expression/) — runs the Expression `.imx` bundle locally through the bundled Swift daemon. No Docker, no cloud.
+- **Against a self-hosted container on a Linux + NVIDIA box**: [`../expression-selfhosted/`](../expression-selfhosted/) — exposes the container's HTTP API on port 8089.
 
 ## Architecture
 
@@ -216,6 +201,6 @@ lsof -i :4202
 
 | File | Description |
 |------|-------------|
-| `quickstart.py` | Animate any face image with audio (terminal) |
-| `agent.py` | LiveKit agent for Docker-based web app |
-| `speech.wav` | Sample audio file for quickstart (13s, 16kHz) |
+| `agent.py` | LiveKit agent that dispatches to cloud Expression (face image or agent ID) |
+| `docker-compose.yml` | Full stack (LiveKit + agent + frontend + Redis) |
+| `speech.wav` | Sample audio bundled for testing |

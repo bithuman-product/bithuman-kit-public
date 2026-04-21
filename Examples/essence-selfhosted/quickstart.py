@@ -1,6 +1,7 @@
 """Play an audio file through a self-hosted bitHuman Essence avatar.
 
-Loads a local .imx model file, streams audio, and displays the avatar in real time.
+Loads a local .imx model on CPU, streams audio in, shows the avatar in a
+window, plays the synchronized audio back through the default speaker.
 
 Usage:
     python quickstart.py --model avatar.imx --audio-file speech.wav
@@ -21,71 +22,70 @@ from bithuman.audio import float32_to_int16, load_audio
 
 load_dotenv()
 
-# Thread-safe audio buffer for speaker output
-audio_buf = bytearray()
-audio_lock = threading.Lock()
+
+def make_speaker(sample_rate: int = 16_000):
+    """Return (output_stream, append_pcm). append_pcm(int16_bytes) is thread-safe."""
+    buf, lock = bytearray(), threading.Lock()
+
+    def callback(outdata, frames, _time, _status):
+        n = frames * 2  # int16 = 2 bytes
+        with lock:
+            take = min(len(buf), n)
+            outdata[: take // 2, 0] = np.frombuffer(buf[:take], dtype=np.int16)
+            outdata[take // 2 :, 0] = 0
+            del buf[:take]
+
+    stream = sd.OutputStream(
+        samplerate=sample_rate, channels=1, dtype="int16", blocksize=640, callback=callback
+    )
+
+    def append(pcm: bytes):
+        with lock:
+            buf.extend(pcm)
+
+    return stream, append
 
 
-def audio_callback(outdata, frames, _time, _status):
-    """Feed buffered audio to the speaker."""
-    n_bytes = frames * 2  # int16 = 2 bytes per sample
-    with audio_lock:
-        available = min(len(audio_buf), n_bytes)
-        outdata[:available // 2, 0] = np.frombuffer(audio_buf[:available], dtype=np.int16)
-        outdata[available // 2:, 0] = 0
-        del audio_buf[:available]
-
-
-async def push_audio(runtime: AsyncBithuman, audio_file: str):
-    """Stream audio to the runtime in small chunks."""
-    audio_np, sr = load_audio(audio_file)
-    audio_np = float32_to_int16(audio_np)
-
-    chunk_size = sr // 100  # 10ms chunks
-    for i in range(0, len(audio_np), chunk_size):
-        await runtime.push_audio(audio_np[i : i + chunk_size].tobytes(), sr, last_chunk=False)
-
+async def stream_audio(runtime: AsyncBithuman, audio_file: str) -> None:
+    pcm, sr = load_audio(audio_file)
+    pcm = float32_to_int16(pcm)
+    chunk = sr // 100  # 10 ms
+    for i in range(0, len(pcm), chunk):
+        await runtime.push_audio(pcm[i : i + chunk].tobytes(), sr, last_chunk=False)
     await runtime.flush()
 
 
-async def main():
-    parser = argparse.ArgumentParser(description="bitHuman Essence -- play audio through avatar")
-    parser.add_argument("--model", default=os.getenv("BITHUMAN_MODEL_PATH"),
-                        help="Path to .imx avatar model")
-    parser.add_argument("--audio-file", required=True, help="Path to audio file (WAV, MP3, etc.)")
-    parser.add_argument("--api-secret", default=os.getenv("BITHUMAN_API_SECRET"))
-    args = parser.parse_args()
+async def main() -> None:
+    p = argparse.ArgumentParser(description="bitHuman Essence — play audio through a local avatar")
+    p.add_argument("--model", default=os.getenv("BITHUMAN_MODEL_PATH"), help="Path to .imx model")
+    p.add_argument("--audio-file", required=True, help="Path to WAV/MP3/FLAC/M4A")
+    p.add_argument("--api-secret", default=os.getenv("BITHUMAN_API_SECRET"))
+    args = p.parse_args()
 
     if not args.model:
-        print("Error: Provide --model or set BITHUMAN_MODEL_PATH")
-        print("Download .imx models from https://www.bithuman.ai")
-        return
+        raise SystemExit("Provide --model or set BITHUMAN_MODEL_PATH (download .imx from https://www.bithuman.ai)")
+    if not args.api_secret:
+        raise SystemExit("Set BITHUMAN_API_SECRET")
 
     runtime = await AsyncBithuman.create(model_path=args.model, api_secret=args.api_secret)
-
-    width, height = runtime.get_frame_size()
+    w, h = runtime.get_frame_size()
     cv2.namedWindow("bitHuman", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("bitHuman", width, height)
+    cv2.resizeWindow("bitHuman", w, h)
 
-    speaker = sd.OutputStream(samplerate=16000, channels=1, dtype="int16",
-                              blocksize=640, callback=audio_callback)
+    speaker, append_pcm = make_speaker()
     speaker.start()
-
     await runtime.start()
-    audio_task = asyncio.create_task(push_audio(runtime, args.audio_file))
-
+    pusher = asyncio.create_task(stream_audio(runtime, args.audio_file))
     try:
         async for frame in runtime.run():
             if frame.has_image:
                 cv2.imshow("bitHuman", frame.bgr_image)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
-
             if frame.audio_chunk:
-                with audio_lock:
-                    audio_buf.extend(frame.audio_chunk.array.tobytes())
+                append_pcm(frame.audio_chunk.array.tobytes())
     finally:
-        audio_task.cancel()
+        pusher.cancel()
         speaker.stop()
         cv2.destroyAllWindows()
         await runtime.stop()

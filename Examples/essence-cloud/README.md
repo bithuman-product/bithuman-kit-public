@@ -29,23 +29,11 @@ Open **http://localhost:4202** in your browser. Click to start talking.
 
 First frame arrives in 2-4 seconds. No model files to manage -- the cloud handles all rendering.
 
-## Terminal Quickstart (no Docker)
+## No-Docker path
 
-```bash
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your API secret and agent ID
-```
+Cloud Essence avatars dispatch through the LiveKit plugin (`bithuman.AvatarSession`), not standalone `AsyncBithuman` — there's no terminal quickstart for this stack. Run the Docker Compose stack above and open http://localhost:4202, or use `agent.py` directly if you already have a LiveKit project.
 
-### Play an audio file through the avatar
-
-A sample `speech.wav` is included in this directory. Or use your own:
-
-```bash
-python quickstart.py --avatar-id YOUR_AGENT_ID --audio-file speech.wav
-```
-
-Press `Q` to quit.
+For a terminal-only, standalone demo, see [`../essence-selfhosted/`](../essence-selfhosted/) (local `.imx`, no Docker, no LiveKit).
 
 ## Architecture
 
@@ -192,6 +180,6 @@ Check that `OPENAI_API_KEY` is set and valid in `.env`.
 
 | File | Description |
 |------|-------------|
-| `quickstart.py` | Play audio through cloud avatar (terminal) |
-| `agent.py` | LiveKit agent for Docker-based web app |
-| `speech.wav` | Sample audio file for quickstart (13s, 16kHz) |
+| `agent.py` | LiveKit agent that dispatches to cloud Essence |
+| `docker-compose.yml` | Full stack (LiveKit + agent + frontend + Redis) |
+| `speech.wav` | Sample audio bundled for testing |

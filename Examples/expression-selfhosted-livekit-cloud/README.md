@@ -61,3 +61,5 @@ For GPU/image/model issues, see the [expression-selfhosted troubleshooting](../e
 |------|-------------|
 | `docker-compose.yml` | 3-service stack (GPU + agent + frontend) |
 | `.env.example` | Env template including LiveKit Cloud vars |
+
+For a terminal-only demo without LiveKit, hit the GPU container's HTTP API directly — see [`../expression-selfhosted/README.md`](../expression-selfhosted/README.md#curl-demo).

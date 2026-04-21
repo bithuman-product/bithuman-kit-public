@@ -66,15 +66,20 @@ curl http://localhost:8089/test-frame -o test.jpg   # check the output image
 curl -X POST http://localhost:8089/benchmark         # check FPS
 ```
 
-To run the interactive quickstart (requires a desktop with display + audio):
+Drive a session directly from the command line once the container is up:
 
 ```bash
-# From the cloned repo directory (expression-selfhosted/)
-pip install -r requirements.txt
-python quickstart.py --avatar-image face.jpg --audio-file speech.wav   # speech.wav included
+# Launch a session: upload a face image + audio, get frames back over websocket
+curl -X POST http://localhost:8089/launch \
+    -F api_secret=$BITHUMAN_API_SECRET \
+    -F avatar_image=@face.jpg \
+    -F audio=@speech.wav
+
+# Or start a streaming task and monitor it
+curl http://localhost:8089/tasks
 ```
 
-> **Note:** `quickstart.py` opens an OpenCV window and plays audio. For headless/SSH servers, use the Full Stack path above (browser at localhost:4202) or the curl endpoints.
+The full `/launch` schema lives at [`docs.bithuman.ai/deployment/self-hosted-gpu`](https://docs.bithuman.ai/deployment/self-hosted-gpu). For an interactive browser UI, use the Docker Compose stack above.
 
 ## Verify the GPU Container
 
@@ -281,11 +286,10 @@ GPU_PORT=9089            # Expression avatar (default: 8089)
 | File | Description |
 |------|-------------|
 | `docker-compose.yml` | Full stack (GPU + agent + frontend + LiveKit + Redis) |
-| `quickstart.py` | Animate a face image with audio (standalone, no LiveKit) |
-| `agent.py` | LiveKit agent connecting to local GPU container |
+| `agent.py` | LiveKit agent that dispatches to the local GPU container |
 | `.env.example` | Environment variable template |
 | `livekit.yaml` | LiveKit server configuration |
-| `speech.wav` | Sample audio file for quickstart (13s, 16kHz) |
+| `speech.wav` | Sample audio bundled for testing |
 
 ## API Reference
 
