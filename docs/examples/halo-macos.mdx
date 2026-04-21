@@ -72,18 +72,29 @@ icon: "sparkles"
 
 ## What runs locally
 
-| Stage | Model | Backend |
-|---|---|---|
-| Voice activity detection | FluidAudio Silero VAD | Core ML |
-| Speech recognition (STT) | FluidAudio Parakeet-TDT v2 | Apple Neural Engine |
-| Language model (LLM) | Qwen3-4B-4bit | MLX Swift on Metal |
-| Text-to-speech (TTS) | FluidAudio Kokoro-82M | Core ML |
-| Audio feature encoder | wav2vec2 | MLX Swift |
-| Lip-sync diffusion transformer | ~1.3 B-param DiT (2-step DMD2) | MLX Swift |
-| VAE decode | Turbo-VAED | Apple Neural Engine (Core ML) |
-| Frame rendering | — | `CALayer.contents` at 25 FPS |
+Everything you'd expect from a voice assistant — plus the lip-synced avatar — runs natively on your Mac:
 
-No network calls are made during a conversation. The only network activity is a one-time weight download on first launch, periodic Sparkle update checks, and — if you choose — anonymous telemetry (see [Privacy](#privacy)).
+- **Listens** — detects when you start and stop talking, and transcribes your speech on the Apple Neural Engine
+- **Thinks** — a 4-billion-parameter bitHuman language model runs on the GPU via Apple's MLX framework
+- **Speaks** — synthesizes a natural-sounding voice from the reply text
+- **Animates** — drives the avatar's lips frame-by-frame in lockstep with the audio, at 25 FPS
+
+No network calls during a conversation. Your microphone stream, conversation, and portrait never leave your Mac. The only outbound activity is a one-time model-weight download on first launch, periodic update checks, and — if you opt in — anonymous usage analytics (see [Privacy](#privacy)).
+
+<Accordion title="Technical stack (for the curious)">
+
+| Stage | Implementation |
+|---|---|
+| Voice activity detection | Silero VAD via Core ML |
+| Speech recognition | Parakeet-TDT v2 on Apple Neural Engine |
+| Language model | Qwen3-4B-4bit via MLX Swift on Metal |
+| Text-to-speech | Kokoro-82M via Core ML |
+| Audio feature encoder | wav2vec2 via MLX Swift |
+| Lip-sync animator | ~1.3 B-parameter diffusion transformer (2-step DMD2) via MLX Swift |
+| Face renderer | Turbo-VAED on Apple Neural Engine |
+| Display | 25 FPS via CALayer |
+
+</Accordion>
 
 ## Sign in (optional)
 
