@@ -60,64 +60,115 @@ expression.imx + speech.wav ──► quickstart.py ──► out.mp4  (25 FPS, 
 
 ## Quick Start
 
+Three commands, zero arguments required — `bithuman demo` auto-downloads a pre-packed demo model (~3.7 GB, cached) and uses a bundled sample audio clip if you don't supply your own:
+
 <Steps>
-  <Step title="Get the two things you need from bitHuman">
-    From [bithuman.ai](https://bithuman.ai):
-
-    - An **API secret** — Developer → API Keys. Expression is 2 credits / minute of rendered video.
-    - An **Expression `.imx` model** — download a pre-packed bundle from your dashboard, or build one from raw weights with `bithuman pack` (see `bithuman pack --help`).
-
-    One `.imx` bundle holds the animator, speech encoder, face encoder, face renderer, and a default face (~3.5 GB). The face is parameterized separately via `identity=` so you don't re-pack a bundle per agent.
-  </Step>
-
   <Step title="Install">
     ```bash
     python -m venv .venv
     .venv/bin/pip install --upgrade bithuman opencv-python-headless
     ```
 
-    On macOS arm64 the `bithuman` wheel ships `bithuman-expression-daemon` pre-built — the Swift subprocess the runtime spawns when you load an Expression `.imx`. We also need `opencv-python-headless` to write the output mp4; the SDK itself doesn't depend on it.
+    On macOS arm64 the `bithuman` wheel ships `bithuman-expression-daemon` pre-built — the Swift subprocess the runtime spawns when you load an Expression `.imx`.
   </Step>
 
-  <Step title="Run the one-line demo">
+  <Step title="Get an API secret">
+    From [bithuman.ai](https://bithuman.ai) → Developer → API Keys. Expression is 2 credits / minute of rendered video.
+
     ```bash
     export BITHUMAN_API_SECRET=your_secret_from_bithuman.ai
-    .venv/bin/bithuman demo \
-        --model /path/to/expression.imx \
-        --output demo.mp4
     ```
-
-    `bithuman demo` uses a bundled sample audio clip — pass `--audio my-speech.wav` to use your own. Model load is ~10 s; rendering runs at ~0.5× real time; first frame is under 1.3 s.
-
-    <Check>Expect **`✓ Wrote demo.mp4 — 393 frames @ 25 FPS`** and a lip-synced video of the bundle's default face talking for 15 s.</Check>
   </Step>
 
-  <Step title="Swap the face (optional)">
-    Pass a portrait image — the SDK encodes it on load (~300 ms, one-time):
+  <Step title="Run it — the easiest possible path">
+    ```bash
+    .venv/bin/bithuman demo
+    ```
+
+    First run downloads the demo `.imx` (~3.7 GB, cached under `~/.cache/bithuman/`). Subsequent runs are instant. Model load: ~10 s. First frame: &lt; 1.3 s. Rendering: ~0.5× real time.
+
+    <Check>Expect **`✓ Wrote demo.mp4 — 393 frames @ 25 FPS`** and a lip-synced video of the default face talking for 15 s.</Check>
+  </Step>
+
+  <Step title="Try a different face (optional)">
+    Pass a portrait image or URL — the SDK encodes it on load (~300 ms):
+
+    ```bash
+    .venv/bin/bithuman demo --identity alice.jpg
+    ```
+
+    Or pull from the [agent gallery](#agent-gallery) below:
 
     ```bash
     .venv/bin/bithuman demo \
-        --model expression.imx \
-        --identity alice.jpg \
-        --output alice.mp4
+        --identity "https://tmoobjxlwcwvxvjeppzq.supabase.co/storage/v1/object/public/bithuman/A74NWD9723/image_20251122_000244_372799.jpg"
     ```
 
-    The same `.imx` now drives Alice. Re-run with `--identity bob.png` and the bundle drives Bob.
+    Portraits are cached under `~/.cache/bithuman/identities/` after the first download.
   </Step>
 
-  <Step title="Go deeper — clone the example">
+  <Step title="Use your own audio + custom model">
+    ```bash
+    .venv/bin/bithuman demo \
+        --model /path/to/your-model.imx \
+        --audio my-speech.wav \
+        --output my-avatar.mp4
+    ```
+  </Step>
+
+  <Step title="Go deeper — clone the full example">
     When you're ready to hack on the pipeline, grab the full example — same API, more hooks to customize:
 
     ```bash
     git clone https://github.com/bithuman-product/bithuman-examples.git
     cd bithuman-examples/apple-expression
-    .venv/bin/python quickstart.py \
-        --model /path/to/expression.imx \
-        --audio my-speech.wav \
-        --output out.mp4
+    .venv/bin/python quickstart.py --model demo.imx --audio speech.wav
     ```
   </Step>
 </Steps>
+
+## Agent gallery
+
+Every pre-curated bitHuman persona from the [Halo app](/examples/halo-macos) is available as a ready-made `--identity`. Portraits are public URLs — no auth needed; the CLI caches them on first use. Popular picks:
+
+| Code | Name | Character |
+|---|---|---|
+| `A74NWD9723` | Energetic Audio Story Buddy | Podcast-host storyteller (Halo's default) |
+| `A91MJY5711` | Warm Relativity Mentor Einstein | Einstein reimagined as a curious mentor |
+| `A22MCJ3461` | Late-Night Interview Host | Charming talk-show riff |
+| `A32XFH3193` | Ethics Advisor | Boardroom-grade principled advisor |
+| `A43XYD7624` | Stage Presence Coach | Stand-up comic + coach |
+| `A24HAC6344` | Fairy-Tale Grandmother | Storytime narrator |
+| `A02GXF3393` | Whimsical Bee Entertainer | Giggly bee mascot |
+| `A37QAW0225` | Pirate Trivia Host | Captain Quizbeard |
+| `A23WJF0199` | Wise Pup | Sir Barksworth the British dog |
+
+Each portrait lives at:
+
+```
+https://tmoobjxlwcwvxvjeppzq.supabase.co/storage/v1/object/public/bithuman/<CODE>/image_*.jpg
+```
+
+Pass any of them directly:
+
+```bash
+.venv/bin/bithuman demo \
+    --identity "https://tmoobjxlwcwvxvjeppzq.supabase.co/storage/v1/object/public/bithuman/A91MJY5711/image_20260312_205650_781649.jpg" \
+    --output einstein.mp4
+```
+
+## Python or Swift?
+
+Two parallel example projects — pick the one that matches your app:
+
+<CardGroup cols={2}>
+  <Card title="Python (recommended)" icon="python" href="https://github.com/bithuman-product/bithuman-examples/tree/main/apple-expression">
+    `pip install bithuman` + `bithuman demo`. Auto-dispatches to the Swift daemon on macOS M3+, or to the in-process Essence runtime everywhere else. What this page walks through.
+  </Card>
+  <Card title="Swift" icon="swift">
+    Native `BithumanAvatar` SwiftPM library + AVAssetWriter. Ships with the private Swift SDK repo ([contact us](https://bithuman.ai) for access). Same `.imx` format, same API shape, no ffmpeg dependency.
+  </Card>
+</CardGroup>
 
 ## How it works
 
