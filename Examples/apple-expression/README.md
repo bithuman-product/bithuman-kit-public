@@ -60,7 +60,7 @@ Or pass a pre-encoded `.npy` reference latent for instant load (useful if the sa
 
 ## Where to get an `.imx`
 
-Build one with the `bithuman pack` CLI (see the [main SDK README](https://github.com/bithuman-product/bithuman-python-sdk#pack)), or download a pre-packed model from your bitHuman dashboard.
+Build one from raw weights with the `bithuman pack` CLI (shipped with the Python SDK), or download a pre-packed model from [your bitHuman dashboard](https://bithuman.ai/).
 
 ## What this example demonstrates
 
@@ -73,6 +73,5 @@ Swap `--audio` for a live microphone stream, or pair with a TTS to build a talki
 ## Related
 
 - [Expression on macOS docs](https://docs.bithuman.ai/examples/apple-expression)
-- [Python SDK reference](https://github.com/bithuman-product/bithuman-python-sdk)
-- [Swift SDK (direct Swift consumers)](https://github.com/bithuman-product/bithuman-expression-swift)
+- [Python SDK on PyPI](https://pypi.org/project/bithuman/)
 - [bitHuman Halo — end-user desktop app built on this SDK](https://docs.bithuman.ai/examples/halo-macos)
