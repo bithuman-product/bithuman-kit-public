@@ -125,19 +125,23 @@ Set `BITHUMAN_API_SECRET` from [https://www.bithuman.ai](https://www.bithuman.ai
 
 # Swift SDK (bitHumanKit) — Apple Silicon native
 
-For embedding into Mac/iPad/iPhone apps. Source-available Swift Package
-distinct from the Python SDK; same billing model.
+For embedding into Mac/iPad/iPhone apps. Distributed as a binary
+Swift Package (XCFramework). Same billing model as the Python SDK.
 
-- Source: https://github.com/bithuman-product/bithuman-kit
-- DocC API reference: https://bithuman-product.github.io/bithuman-kit/
-- Reference apps: https://github.com/bithuman-product/bithuman-apps
-- Compact AI agent ingest: https://github.com/bithuman-product/bithuman-kit/raw/main/llms.txt
-- Comprehensive ingest: https://github.com/bithuman-product/bithuman-kit/raw/main/llms-full.txt
+- Public package (binary distribution): https://github.com/bithuman-product/bithuman-kit-public
+- DocC API reference: https://docs.bithuman.ai/swift-sdk/overview
+- Reference apps (full Mac/iPad/iPhone source): https://github.com/bithuman-product/bithuman-apps
+- Issue tracker: https://github.com/bithuman-product/bithuman-kit-public/issues
 
 Install:
 
-  .package(url: "https://github.com/bithuman-product/bithuman-kit.git",
+  .package(url: "https://github.com/bithuman-product/bithuman-kit-public.git",
            from: "0.8.1")
+
+The package wraps a pre-compiled XCFramework — every dep (MLX,
+HuggingFace, Tokenizers, …) is statically linked, so consumers
+have zero transitive Swift Package dependencies. Just
+`import bitHumanKit` and go.
 
 Avatar mode requires BITHUMAN_API_KEY; audio-only mode is unmetered.
 
@@ -157,6 +161,6 @@ If you are an AI coding agent reading this file to set up bitHuman:
 Discoverability:
 - OpenAPI spec: https://docs.bithuman.ai/api-reference/openapi.yaml
 - Examples repo: https://github.com/bithuman-product/bithuman-examples
-- Swift SDK source: https://github.com/bithuman-product/bithuman-kit
+- Swift SDK package: https://github.com/bithuman-product/bithuman-kit-public
 - Swift reference apps: https://github.com/bithuman-product/bithuman-apps
 - Status: https://status.bithuman.ai

@@ -11,7 +11,7 @@ Authentication: api-secret header on every request (or BITHUMAN_API_KEY for the 
 Python SDK: pip install bithuman
 LiveKit Plugin: pip install livekit-plugins-bithuman
 GPU Container: docker.io/sgubithuman/expression-avatar:latest
-Swift Package: https://github.com/bithuman-product/bithuman-kit (from "0.8.1")
+Swift Package: https://github.com/bithuman-product/bithuman-kit-public (from "0.8.1")
 CLI: brew tap bithuman-product/bithuman && brew install bithuman-cli
 Examples: https://github.com/bithuman-product/bithuman-examples
 Swift reference apps: https://github.com/bithuman-product/bithuman-apps
@@ -5616,8 +5616,8 @@ Always verify that a gesture action exists in the API response before using it. 
 The Swift SDK has its own canonical ingest files at the SDK repo
 root, kept current with each release:
 
-- Compact:        https://github.com/bithuman-product/bithuman-kit/raw/main/llms.txt
-- Comprehensive:  https://github.com/bithuman-product/bithuman-kit/raw/main/llms-full.txt
+- Compact:        https://docs.bithuman.ai/llms.txt
+- Comprehensive:  https://docs.bithuman.ai/llms-full.txt
 
 Pointing AI coding agents at one of those URLs is the recommended
 ingest path for Swift integration tasks.

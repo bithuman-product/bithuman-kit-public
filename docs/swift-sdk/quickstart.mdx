@@ -45,7 +45,7 @@ your `dependencies` and `targets` arrays.
 paste the URL → click "Add Package":
 
 ```
-https://github.com/bithuman-product/bithuman-kit.git
+https://github.com/bithuman-product/bithuman-kit-public.git
 ```
 
 When Xcode asks which products to add, pick `bitHumanKit` and
@@ -55,14 +55,14 @@ attach it to your app's target.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/bithuman-product/bithuman-kit.git",
+    .package(url: "https://github.com/bithuman-product/bithuman-kit-public.git",
              from: "0.8.1")
 ],
 targets: [
     .target(
         name: "MyApp",
         dependencies: [
-            .product(name: "bitHumanKit", package: "bithuman-kit")
+            .product(name: "bitHumanKit", package: "bithuman-kit-public")
         ]
     )
 ]

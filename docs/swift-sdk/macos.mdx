@@ -23,21 +23,21 @@ avatar engine) a 1-request-per-minute billing heartbeat.
 In Xcode: **File → Add Package Dependencies →**
 
 ```
-https://github.com/bithuman-product/bithuman-kit.git
+https://github.com/bithuman-product/bithuman-kit-public.git
 ```
 
 Or in `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/bithuman-product/bithuman-kit.git",
+    .package(url: "https://github.com/bithuman-product/bithuman-kit-public.git",
              from: "0.8.1")
 ],
 targets: [
     .target(
         name: "MyApp",
         dependencies: [
-            .product(name: "bitHumanKit", package: "bithuman-kit")
+            .product(name: "bitHumanKit", package: "bithuman-kit-public")
         ]
     )
 ]
@@ -183,7 +183,7 @@ Mac apps consuming bitHumanKit ship via the standard channels:
   source designed to be cloned and adapted.
 - **[bithuman-cli](../cli.md)** — same SDK, CLI shell. Three modes
   (text / voice / video). Source at
-  [bithuman-product/bithuman-kit](https://github.com/bithuman-product/bithuman-kit/tree/main/Sources/BithumanCLI).
+  available via Homebrew (`brew install bithuman-cli`).
 
 ## Troubleshooting
 
@@ -204,5 +204,5 @@ The most common Mac-specific issues:
 
 - [iOS / iPadOS deployment](ios.md)
 - [Cookbook](../cookbook/) — copy-paste recipes
-- [API reference](https://bithuman-product.github.io/bithuman-kit/) — DocC, every public type
+- [API reference](https://docs.bithuman.ai/swift-sdk/overview) — DocC, every public type
 - [bithuman-cli](../cli.md) — what you can do without writing code
