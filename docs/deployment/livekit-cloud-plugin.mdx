@@ -135,7 +135,7 @@ avatar = bithuman.AvatarSession(
 )
 ```
 
-### Expression Model (GPU) — Agent ID
+### Expression Model — Agent ID
 
 Higher-fidelity face animation for platform-created agents.
 
@@ -147,7 +147,7 @@ avatar = bithuman.AvatarSession(
 )
 ```
 
-### Expression Model (GPU) — Custom Image
+### Expression Model — Custom Image
 
 Create an avatar from any face image on-the-fly.
 
@@ -163,13 +163,17 @@ avatar = bithuman.AvatarSession(
 
 ### Model Comparison
 
-| Feature | Essence (CPU) | Expression (GPU) |
+| Feature | Essence (CPU) | Expression |
 |---------|--------------|------------------|
 | Personalities | Pre-trained | Dynamic |
 | Response time | Faster (~2s) | Standard (~4s) |
 | Body support | Full body + animal mode | Face and shoulders |
 | Animal mode | Yes | No |
 | Custom images | No | Yes |
+
+<Tip>
+The Expression model runs on bitHuman Cloud (default), your own NVIDIA GPU ([Self-Hosted GPU](/deployment/self-hosted-gpu)), or natively on Apple Silicon M3+ ([Expression on macOS](/examples/apple-expression)).
+</Tip>
 
 ---
 

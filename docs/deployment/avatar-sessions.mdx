@@ -14,12 +14,12 @@ An **AvatarSession** is how you bring a bitHuman avatar into a LiveKit room. Thi
 
 ## Choose Your Approach
 
-| Approach | Model | Best For | Model Files | Compute | Internet |
-|----------|-------|----------|-------------|---------|----------|
-| [Cloud Plugin](#cloud-plugin) | Essence or Expression | Getting started, web apps | No | bitHuman cloud | Per turn |
-| [Self-Hosted CPU](#self-hosted-cpu) | Essence | Privacy, edge devices, kiosks | Yes (`.imx`) | Your CPU | Auth only |
-| [Self-Hosted GPU](#self-hosted-gpu) | Expression | Dynamic faces, custom images | No (uses images) | Your NVIDIA GPU | Auth only |
-| [On-Device Apple Silicon](#on-device-apple-silicon) | Expression | Native consumer apps, offline-first | No (universal weights) | User's M3+ Mac / M4+ iPad / A18 Pro+ iPhone | Heartbeat only |
+| Approach | Best For | Model Files | GPU Required | Internet Required |
+|----------|----------|-------------|--------------|-------------------|
+| [Cloud Plugin](#cloud-plugin) | Getting started, web apps | No | No | Yes |
+| [Self-Hosted CPU](#self-hosted-cpu) | Privacy, edge devices | Yes (.imx) | No | Only for auth |
+| [Self-Hosted GPU](#self-hosted-gpu) | Dynamic faces, custom images | No (uses images) | Yes | Only for auth |
+| [On-Device macOS](/examples/apple-expression) | Apple Silicon, privacy-first | No (uses images) | No (Apple M3+) | Only for auth |
 
 ---
 

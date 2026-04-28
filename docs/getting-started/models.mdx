@@ -45,10 +45,10 @@ The **Expression** model generates real-time facial expressions using a diffusio
 - Higher visual fidelity for close-up conversational interactions.
 - Now runs **on-device** on Apple Silicon M3+ — no GPU server, no per-turn network round-trip.
 
-**Where to deploy:**
-- [bitHuman Cloud (LiveKit Plugin)](/deployment/livekit-cloud-plugin) — bitHuman hosts the GPU worker (add `model="expression"`)
-- [Self-hosted GPU container](/deployment/self-hosted-gpu) — run the Docker container on your own NVIDIA GPU
-- [On-device Apple Silicon](/swift-sdk/overview) — `bitHumanKit` Swift Package for Mac/iPad/iPhone, plus the `bithuman-cli` Homebrew tool
+**Deployment options:**
+- [Cloud Plugin](/deployment/livekit-cloud-plugin) — bitHuman hosts the GPU worker (add `model="expression"`)
+- [Self-Hosted GPU](/deployment/self-hosted-gpu) — run the Docker container on your own NVIDIA GPU
+- [On-Device macOS](/examples/apple-expression) — run natively on Apple Silicon M3+ via `pip install bithuman`
 
 ## Which should I use?
 
