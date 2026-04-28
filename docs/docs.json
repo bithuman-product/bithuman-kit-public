@@ -65,7 +65,8 @@
               "swift-sdk/quickstart",
               "swift-sdk/macos",
               "swift-sdk/ios",
-              "swift-sdk/cli"
+              "swift-sdk/cli",
+              "swift-sdk/troubleshooting"
             ]
           },
           {

@@ -20,9 +20,16 @@ bitHuman creates digital avatars that lip-sync to audio in real-time. Feed in au
 - **Cloud** — no GPU, no model files. Just an API secret.
 - **Self-Hosted CPU** — download an `.imx` model, run on any machine.
 - **Self-Hosted GPU (Linux + NVIDIA)** — any face image, real-time lip-sync from the Expression model on your own GPU.
-- **[On-Device macOS](/examples/apple-expression)** — Expression avatar running natively on Apple Silicon (M3+) via the bundled Swift runtime. No GPU, no cloud, no Docker. The same pipeline also powers [bitHuman Halo](/examples/halo-macos), our free desktop companion app.
+- **[On-Device Apple Silicon (Swift SDK)](/swift-sdk/overview)** — `bitHumanKit` Swift Package for Mac/iPad/iPhone. Drop-in voice + lip-synced avatar; runs locally. See the [Swift SDK quickstart](/swift-sdk/quickstart) for the 10-minute integration.
 
 ## Quick Start
+
+<Note>
+Building a **Mac/iPad/iPhone app**? Skip straight to the
+[**Swift SDK quickstart →**](/swift-sdk/quickstart). The snippets
+below are for the **Python SDK / REST API / Docker** path.
+</Note>
+
 
 <CodeGroup>
 

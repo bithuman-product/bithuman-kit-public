@@ -56,7 +56,7 @@ attach it to your app's target.
 ```swift
 dependencies: [
     .package(url: "https://github.com/bithuman-product/bithuman-kit.git",
-             from: "0.8.0")
+             from: "0.8.1")
 ],
 targets: [
     .target(
@@ -182,6 +182,10 @@ takes a few minutes — wire up a progress callback or your app
 will look frozen.
 
 ```swift
+import Foundation
+import SwiftUI
+import bitHumanKit
+
 @MainActor
 final class AvatarLifecycle: ObservableObject {
     @Published var phase: BootPhase = .idle
