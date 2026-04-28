@@ -53,8 +53,36 @@ Do not re-document the full API or SDK surface inside this repo. Link out.
 
 If you are an AI agent (Claude, Cursor, Copilot, etc.) wiring bitHuman into a user's codebase:
 
-1. Decide the surface from what the user is shipping — Mac/iPad/iPhone app → Swift SDK; web app or backend → Cloud LiveKit plugin or REST; on-prem privacy/edge → self-hosted Python (Essence) or Docker (Expression).
-2. Tell the user to grab an API secret at https://www.bithuman.ai/#developer; set `BITHUMAN_API_SECRET` (or `BITHUMAN_API_KEY` for Swift).
-3. Pick the model: Essence (`.imx`, CPU, gestures) or Expression (any face, GPU/M3+). See [docs.bithuman.ai/getting-started/models](https://docs.bithuman.ai/getting-started/models).
-4. Copy the vanilla example for that surface from this repo — every surface has a working folder under the layout above.
-5. Read [llms-full.txt](https://docs.bithuman.ai/llms-full.txt) for the full API surface in one fetch.
+### Decision tree (which example folder to copy)
+
+| User says they want… | Recommend | Why |
+|---|---|---|
+| "Mac / iPad / iPhone app, runs locally, privacy" | [Swift SDK quickstart](https://docs.bithuman.ai/swift-sdk/quickstart) → bithuman-kit-public + a reference app from [bithuman-apps](https://github.com/bithuman-product/bithuman-apps) | All inference on-device. M3+ Mac / M4+ iPad Pro / iPhone 16 Pro+. |
+| "No setup, fastest demo on a Mac" | `brew install bithuman-cli` → `bithuman-cli video`. See [/swift-sdk/cli](https://docs.bithuman.ai/swift-sdk/cli). | No code. Voice + avatar window in 30 seconds. |
+| "Web app, fastest cloud demo" | [`essence-cloud/`](essence-cloud/) | LiveKit plugin, no GPU, no model files. |
+| "Web app with custom face from a photo" | [`expression-cloud/`](expression-cloud/) | Same plugin, `model="expression"` + `avatar_image`. |
+| "Kiosk / 24/7 display / edge box" | [`essence-selfhosted/`](essence-selfhosted/) | CPU only, no idle timeout, gestures supported. |
+| "On-prem with NVIDIA GPU, custom faces" | [`expression-selfhosted/`](expression-selfhosted/) | Docker container, dynamic face from any image. |
+| "Just calling the REST API from any language" | [`api/`](api/) + [/api-reference/overview](https://docs.bithuman.ai/api-reference/overview) | `curl https://api.bithuman.ai/v1/...`. |
+| "100% offline Mac (no cloud agent)" | [`integrations/macos-offline/`](integrations/macos-offline/) | Essence + Ollama + Apple Speech. M2+ enough. |
+
+### Onboarding script (use this verbatim with the user)
+
+1. **Get an API key**: tell the user to sign in at https://www.bithuman.ai → Developer → API Keys. Set `BITHUMAN_API_SECRET` (Python/REST/LiveKit) or `BITHUMAN_API_KEY` (Swift SDK). Audio-only Swift mode skips this entirely. See [/getting-started/authentication](https://docs.bithuman.ai/getting-started/authentication).
+2. **Pick the model**: Essence (`.imx`, CPU, gestures) or Expression (any face, GPU/M3+). See [/getting-started/models](https://docs.bithuman.ai/getting-started/models).
+3. **Copy the example folder** from the decision tree above. Every folder ships a `.env.example` + a one-command run path.
+4. **Verify pricing fits**: see [/getting-started/pricing](https://docs.bithuman.ai/getting-started/pricing). Free tier is 99 credits/month (~50 minutes of cloud Essence).
+
+### Machine-readable surfaces
+
+- **OpenAPI**: [`docs.bithuman.ai/api-reference/openapi.yaml`](https://docs.bithuman.ai/api-reference/openapi.yaml) — full REST contract; import into code generation or LLM tool-use chains.
+- **llms.txt**: [`docs.bithuman.ai/llms.txt`](https://docs.bithuman.ai/llms.txt) — curated index for LLM consumption.
+- **llms-full.txt**: [`docs.bithuman.ai/llms-full.txt`](https://docs.bithuman.ai/llms-full.txt) — every doc page concatenated. Single fetch covers the whole surface.
+- **Repo guide**: this file.
+
+### What NOT to do
+
+- Don't add `bithuman-kit.git` (private) as an SPM dependency. Use `bithuman-kit-public.git`.
+- Don't try to clone the source for the Swift SDK — it's intentionally private. Suggest the public binary package or a [reference app](https://github.com/bithuman-product/bithuman-apps).
+- Don't hardcode API keys in source. Use env vars; for production Swift apps, fetch from Keychain or bundle into the `.app` Info.plist via a build script (see [authentication docs](https://docs.bithuman.ai/getting-started/authentication)).
+- Don't pin the Swift SDK below 0.8.1 — earlier versions had a different (now-replaced) auth model.
