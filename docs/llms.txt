@@ -13,6 +13,16 @@ that speaks. Get an API secret at https://www.bithuman.ai/#developer →
 set `BITHUMAN_API_SECRET` (Python/REST/LiveKit) or `BITHUMAN_API_KEY`
 (Swift SDK) before any code runs.
 
+
+## Pricing (credits per minute)
+- Essence (self-hosted CPU): 1 cr/min
+- Essence (cloud): 2 cr/min  
+- Expression (self-hosted GPU or Apple Silicon): 2 cr/min
+- Expression (cloud): 4 cr/min
+- Agent generation: 250 credits (one-time)
+- Free tier: 99 credits/month (no credit card required)
+- Check balance: GET https://api.bithuman.ai/v2/credit-summaries
+
 ## Models
 
 - **Essence** — CPU-only, pre-rendered animations driven by an `.imx`
