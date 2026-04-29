@@ -24,30 +24,47 @@ jobs:
       - name: Reject blobs over 10 MB
         env:
           MAX_BYTES: '10485760'
-          BASE_REF: ${{ github.base_ref || github.event.before }}
+          # On PR: base_ref is the target branch name (e.g. "main").
+          # On push: event.before is the previous commit SHA (or
+          # all-zeros on a brand-new branch / first push).
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        shell: bash
         run: |
           set -euo pipefail
-          if [ -n "${BASE_REF:-}" ] && [ "${BASE_REF}" != "0000000000000000000000000000000000000000" ]; then
-            RANGE="origin/${BASE_REF#refs/heads/}...HEAD"
-            git fetch --depth=50 origin "${BASE_REF#refs/heads/}" 2>/dev/null || RANGE="HEAD"
+
+          if [ -n "${BASE_REF:-}" ]; then
+            git fetch --depth=50 origin "${BASE_REF}" 2>/dev/null || true
+            RANGE="origin/${BASE_REF}..HEAD"
+          elif [ -n "${BEFORE_SHA:-}" ] \
+               && [ "${BEFORE_SHA}" != "0000000000000000000000000000000000000000" ]; then
+            RANGE="${BEFORE_SHA}..HEAD"
           else
-            RANGE="HEAD"
+            RANGE=""
           fi
-          OFFENDERS=$(
-            if [ "$RANGE" = "HEAD" ]; then
-              git ls-tree -r --long HEAD
-            else
-              git diff --diff-filter=AM --name-only "$RANGE" \
-                | while read -r p; do
-                    [ -n "$p" ] && git ls-tree --long HEAD -- "$p" 2>/dev/null
-                  done
-            fi \
-            | awk -v MAX="$MAX_BYTES" '$4+0 > MAX { printf "%.1fMB  %s\n", $4/1048576, $5 }'
-          )
+
+          if [ -z "$RANGE" ]; then
+            # Brand-new branch — scan everything currently in HEAD.
+            TREE=$(git ls-tree -r --long HEAD)
+          else
+            ADDED=$(git diff --diff-filter=AM --name-only "$RANGE" 2>/dev/null || true)
+            TREE=""
+            if [ -n "$ADDED" ]; then
+              while IFS= read -r p; do
+                [ -n "$p" ] || continue
+                LINE=$(git ls-tree --long HEAD -- "$p" 2>/dev/null || true)
+                [ -n "$LINE" ] && TREE="${TREE}${LINE}"$'\n'
+              done <<< "$ADDED"
+            fi
+          fi
+
+          OFFENDERS=$(printf '%s' "$TREE" \
+            | awk -v MAX="$MAX_BYTES" '$4+0 > MAX { printf "%.1fMB  %s\n", $4/1048576, $5 }')
+
           if [ -n "$OFFENDERS" ]; then
             echo "::error::Files exceeding 10 MB were added. Use git-lfs or external object storage instead."
             echo ""
             echo "$OFFENDERS"
             exit 1
           fi
-          echo "OK — no oversized blobs in this change."
+          echo "OK — no oversized blobs in this change ($(printf '%s' "$TREE" | wc -l | tr -d ' ') paths checked)."
