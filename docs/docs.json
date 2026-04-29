@@ -176,5 +176,35 @@
       "github": "https://github.com/bithuman-product/bithuman-examples",
       "discord": "https://discord.gg/ES953n7bPA"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/python-sdk",
+      "destination": "/getting-started/quickstart"
+    },
+    {
+      "source": "/python-sdk/overview",
+      "destination": "/getting-started/quickstart"
+    },
+    {
+      "source": "/python-sdk/quickstart",
+      "destination": "/getting-started/quickstart"
+    },
+    {
+      "source": "/platform",
+      "destination": "/api-reference/overview"
+    },
+    {
+      "source": "/swift-sdk/cookbook",
+      "destination": "/swift-sdk/quickstart"
+    },
+    {
+      "source": "/swift-sdk/agentic",
+      "destination": "/swift-sdk/quickstart"
+    },
+    {
+      "source": "/swift-sdk/index",
+      "destination": "/swift-sdk/overview"
+    }
+  ]
 }

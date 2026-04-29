@@ -9,6 +9,10 @@ under 10 minutes. The on-device runtime makes no network calls
 (other than the first-launch weights download); all inference
 runs locally.
 
+<Tip>
+**Want a working app right now?** Clone [bithuman-apps](https://github.com/bithuman-product/bithuman-apps) — Mac (`swift run BithumanMac`), iPad, and iPhone reference apps that consume the SDK out of the box. Same code as this quickstart, just pre-wired. Walk through this page if you're integrating the SDK into an existing project; clone the reference app if you want to read finished code.
+</Tip>
+
 ## Prerequisites
 
 - **Xcode 26+** — older Xcodes don't recognise some Swift 6
@@ -20,7 +24,7 @@ runs locally.
   on real devices (free is fine for sideloaded builds; paid is
   required for App Store + the memory entitlements).
 - **A target device that meets the
-  [hardware floor](index.md#hardware-floor)** — under-spec devices
+  [hardware floor](/swift-sdk/overview#hardware-floor)** — under-spec devices
   are refused at runtime via `HardwareCheck.evaluate()`.
 
 ### If you've never used Swift Package Manager
@@ -325,9 +329,7 @@ animated face — none of it touches the network.
 
 ## Next
 
-- **[Cookbook](cookbook/)** — agent swap, voice cloning, custom
-  prompts, PiP for iPad, drag-drop face replacement.
-- **[Building with AI agents](agentic.md)** — letting Claude Code
-  or Cursor pair-program with the SDK.
-- **[Troubleshooting](troubleshooting.md)** — every error pattern
-  with the fix.
+- **[Reference apps](https://github.com/bithuman-product/bithuman-apps)** — Mac, iPad, and iPhone source-available apps that consume the SDK. Drag-drop face swap, PiP, Stage Manager widget, all wired up.
+- **[Platform-specific guides](/swift-sdk/macos)** — entitlements, distribution, and host-specific patterns for [macOS](/swift-sdk/macos) and [iOS / iPadOS](/swift-sdk/ios).
+- **[CLI](/swift-sdk/cli)** — `brew install bithuman-cli` for a no-code Mac terminal app built on the same SDK.
+- **[Troubleshooting](/swift-sdk/troubleshooting)** — every error pattern with the fix.
