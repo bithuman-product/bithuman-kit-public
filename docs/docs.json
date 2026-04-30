@@ -66,6 +66,7 @@
             "pages": [
               "swift-sdk/overview",
               "swift-sdk/quickstart",
+              "swift-sdk/essence",
               "swift-sdk/macos",
               "swift-sdk/ios",
               "swift-sdk/cli",

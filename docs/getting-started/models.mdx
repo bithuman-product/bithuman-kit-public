@@ -12,7 +12,7 @@ bitHuman ships two avatar models. Pick the one that fits your use case.
 |---|---|---|
 | **What it does** | Pre-rendered animations with real-time lip-sync | AI-generated facial animation from any photo |
 | **Avatar source** | `.imx` model file (built once from your photo/video) | Any face image — no build step |
-| **Runs on** | CPU (any device) | NVIDIA GPU (server) **or** Apple Silicon M3+ (on-device) |
+| **Runs on** | CPU (any device) **or** Apple Silicon M3+ Mac / iPad Pro M4+ (on-device via [Swift SDK](/swift-sdk/essence)) | NVIDIA GPU (server) **or** Apple Silicon M3+ (on-device) |
 | **Lip-sync** | Yes | Yes |
 | **Custom gestures** | Yes (wave, nod, laugh, etc.) | No |
 | **Idle animations** | Pre-recorded (natural movement loops) | AI-generated micro-movements |
@@ -33,6 +33,7 @@ The **Essence** model uses pre-built avatar animations with real-time lip-sync. 
 **Where to deploy:**
 - [bitHuman Cloud (LiveKit Plugin)](/deployment/livekit-cloud-plugin) — zero infrastructure, bitHuman hosts the avatar worker
 - [Self-hosted Python SDK](/getting-started/quickstart) — `pip install bithuman`, run `.imx` on your hardware
+- [On-device Apple Silicon Swift](/swift-sdk/essence) — 720p+ playback on Mac M3+ and iPad Pro M4+ via `bitHumanKit`
 - [REST API](/api-reference/overview) — `curl` against `api.bithuman.ai/v1/agent/{code}/speak`
 - [Website Embed](/integrations/embed) — drop-in iframe or chat widget
 
