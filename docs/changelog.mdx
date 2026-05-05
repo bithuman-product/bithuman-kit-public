@@ -1,0 +1,107 @@
+---
+title: "Changelog"
+description: "Release notes and version history for the bitHuman platform."
+icon: "clock-rotate-left"
+---
+
+<Note>
+This page tracks **product-level** changes (platform, web, agent runtime). For per-version release notes of the **`bithuman` PyPI package** specifically, see the [Python SDK CHANGELOG](https://github.com/bithuman-product/bithuman-python-sdk-public/blob/main/CHANGELOG.md). For the **Swift SDK** (`bitHumanKit`), see the [bithuman-kit-public Releases page](https://github.com/bithuman-product/bithuman-kit-public/releases).
+</Note>
+
+## April 2026
+
+### Chat Widget v5
+- New `bithuman-chat-widget-v5.js` with text, voice, and video modes in a single floating widget
+- Configurable themes (`light`/`dark`), accent colors, FAB styles (`bar`/`circle`)
+- Public API: `BitHumanChat.open()`, `close()`, `isOpen()`, `setTheme()`, `destroy()`
+- Suggested questions and custom welcome message support
+
+### FAQ Knowledge Base Improvements
+- FAQ search now always executes (no early exit on keyword match)
+- Removed duplicate FAQ deduplication logic that was dropping valid results
+
+### Voice Mode Enhancements
+- Siri-style animation during voice interactions
+- Multilingual TTS support: 11 new languages with automatic voice selection
+- Thai, Chinese, Arabic, and additional language support
+
+### Streaming & Performance
+- Instant text streaming to the UI without waiting for audio sync
+
+---
+
+## March 2026
+
+### Platform UI Refresh
+- Redesigned navigation: sidebar with **Explore**, **Library**, **Billing**, **Developer** sections
+- **Explore** replaces the old Community page — browse agents, apps, videos, and books with category filters
+- **Library** replaces My Agents — view and manage your agents with new side-panel settings (Identity, Features, Distribute, Developer tabs)
+- **Developer** section consolidates API Keys, Webhooks, Integrations, and Docs in one place
+- New top navigation: Platform, Create, Plan, Docs, Case Studies, Contact
+- Credit balance visible in the top navigation bar
+- Agent context menu: Launch Agent, Create Video, Share, Clone, Embed, Download
+
+### Documentation Updates
+- Updated all screenshots to match the March 2026 UI
+- Updated all navigation references (Developer → API Keys, Explore page, Library)
+- Updated prerequisites snippet with new Explore page download flow
+
+---
+
+## February 2026
+
+### Expression Avatar v2
+- 24% faster rendering pipeline with optimized video decoder
+- Eliminates visual artifacts in concurrent sessions
+
+### Self-Hosted GPU Container
+- Published Expression Avatar Docker image for self-hosted deployment
+- Supports up to 8 concurrent sessions per GPU
+- Cold start ~50s, warm start 4-6s
+- ~5 GB auto-downloaded model weights (cached in Docker volume)
+
+### Developer Examples Overhaul
+- Fixed Docker Compose env_file handling across all 4 example stacks
+- Standardized `.env.example` files with section headers and inline help
+- Expanded READMEs with architecture diagrams, config tables, verification steps
+- Added `api/test.py` for zero-friction API credential validation
+- Added `AGENTS.md` for AI coding agent discoverability
+- Added `llms.txt` and `llms-full.txt` for AI documentation indexing
+- Published OpenAPI specification
+
+### REST API
+- `POST /v1/agent/{code}/speak` — make avatar speak text in active sessions
+- `POST /v1/agent/{code}/add-context` — inject silent background knowledge
+- Improved error responses with consistent error codes and messages
+
+### SDK & Plugin
+- `livekit-plugins-bithuman` — Expression model support with `model="expression"`
+- `bithuman.AvatarSession` — unified interface for cloud, CPU, and GPU modes
+- Animal mode support for Essence avatars
+
+---
+
+## January 2026
+
+### Essence Avatar
+- CPU-only avatar rendering from `.imx` model files
+- 25 FPS real-time on 4+ core machines
+- Cross-platform: Linux, macOS (M2+), Windows (WSL)
+
+### Platform API
+- Agent generation from text prompts + image/video/audio
+- Agent management (CRUD operations)
+- File upload (URL and base64)
+- Dynamics/gesture generation and triggering
+
+### Integrations
+- LiveKit Cloud Plugin
+- Website embed (iframe with JWT)
+- Webhooks (room.join, chat.push events)
+- Flutter full-stack example
+
+---
+
+<Info>
+For feature requests and bug reports, visit our [GitHub](https://github.com/bithuman-product/bithuman-examples/issues) or [Discord](https://discord.gg/ES953n7bPA).
+</Info>

@@ -1,0 +1,249 @@
+---
+title: "LiveKit Cloud Plugin: Zero-GPU Avatar Setup"
+description: "Use bitHuman avatars in LiveKit rooms with the cloud plugin. No GPU needed — install, configure, and run in 3 steps."
+icon: "cloud"
+---
+
+Use existing bitHuman agents in real-time applications with our cloud-hosted LiveKit plugin. The avatar runs on bitHuman's servers — no model files, no GPU needed on your side.
+
+<Info>
+**New here?** Read [How It Works](/getting-started/how-it-works) first to understand rooms, sessions, and avatars.
+</Info>
+
+## Quick Start
+
+<Steps>
+  <Step title="Install the plugin">
+    ```bash
+    pip install livekit-plugins-bithuman
+    ```
+
+    This installs the bitHuman LiveKit plugin along with all required dependencies (`bithuman`, `livekit-agents`, etc.).
+  </Step>
+  <Step title="Get your API Secret">
+    Go to [Developer → API Keys](https://www.bithuman.ai/#developer) and copy your **API Secret**.
+
+    <img src="/images/example-api-secret.jpg" alt="API Keys" style={{ borderRadius: '8px' }} />
+  </Step>
+  <Step title="Find your Agent ID">
+    Go to your [Library](https://www.bithuman.ai/#library) and click any agent. The side panel shows your **Agent ID** (e.g., `A18MDE7951`).
+
+    <img src="/images/agent-settings-dialog.jpg" alt="Agent Settings" style={{ borderRadius: '8px' }} />
+  </Step>
+  <Step title="Set environment variables">
+    ```bash
+    export BITHUMAN_API_SECRET="your_api_secret"
+    export BITHUMAN_AGENT_ID="A78WKV4515"
+    export OPENAI_API_KEY="sk-..."
+
+    # LiveKit (get from cloud.livekit.io)
+    export LIVEKIT_URL="wss://your-project.livekit.cloud"
+    export LIVEKIT_API_KEY="APIxxxxxxxx"
+    export LIVEKIT_API_SECRET="xxxxxxxx"
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Complete Working Example
+
+Here's a full agent that uses a cloud-hosted avatar:
+
+```python
+import asyncio
+import os
+from livekit.agents import (
+    Agent,
+    AgentSession,
+    JobContext,
+    RoomOutputOptions,
+    WorkerOptions,
+    cli,
+    llm,
+)
+from livekit.plugins import openai, silero, bithuman
+
+class MyAgent(Agent):
+    def __init__(self):
+        super().__init__(
+            instructions="""You are a friendly assistant.
+            Keep responses to 1-2 sentences.""",
+        )
+
+async def entrypoint(ctx: JobContext):
+    # Connect to the LiveKit room
+    await ctx.connect()
+
+    # Wait for a human to join
+    await ctx.wait_for_participant()
+
+    # Create a cloud-hosted avatar
+    avatar = bithuman.AvatarSession(
+        avatar_id=os.getenv("BITHUMAN_AGENT_ID"),
+        api_secret=os.getenv("BITHUMAN_API_SECRET"),
+    )
+
+    # Wire up the AI pipeline
+    session = AgentSession(
+        stt=openai.STT(),              # Listens to the user
+        llm=openai.LLM(),              # Generates responses
+        tts=openai.TTS(),              # Converts text to speech
+        vad=silero.VAD.load(),         # Detects when user is speaking
+    )
+
+    # Start — avatar joins room and begins animating
+    await avatar.start(session, room=ctx.room)
+
+    await session.start(
+        agent=MyAgent(),
+        room=ctx.room,
+        room_output_options=RoomOutputOptions(audio_enabled=False),
+    )
+
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+```
+
+Run it:
+```bash
+python agent.py dev
+```
+
+Open [agents-playground.livekit.io](https://agents-playground.livekit.io) and talk to your avatar.
+
+### What Happens When You Run This
+
+1. Your agent connects to a LiveKit room and waits for a user
+2. When a user joins, `AvatarSession` sends a request to bitHuman's cloud
+3. A cloud avatar worker downloads the model (cached after first time) and joins the room
+4. The user speaks → STT transcribes → LLM responds → TTS generates audio → Avatar animates
+5. The avatar publishes video to the room — the user sees a talking face
+
+---
+
+## Avatar Modes
+
+### Essence Model (CPU) — Default
+
+Pre-built avatars with full body support, animal mode, and fast response times.
+
+```python
+avatar = bithuman.AvatarSession(
+    avatar_id="A78WKV4515",
+    api_secret="your_api_secret",
+)
+```
+
+### Expression Model — Agent ID
+
+Higher-fidelity face animation for platform-created agents.
+
+```python
+avatar = bithuman.AvatarSession(
+    avatar_id="A78WKV4515",
+    api_secret="your_api_secret",
+    model="expression",
+)
+```
+
+### Expression Model — Custom Image
+
+Create an avatar from any face image on-the-fly.
+
+```python
+from PIL import Image
+
+avatar = bithuman.AvatarSession(
+    avatar_image=Image.open("face.jpg"),
+    api_secret="your_api_secret",
+    model="expression",
+)
+```
+
+### Model Comparison
+
+| Feature | Essence (CPU) | Expression |
+|---------|--------------|------------------|
+| Personalities | Pre-trained | Dynamic |
+| Response time | Faster (~2s) | Standard (~4s) |
+| Body support | Full body + animal mode | Face and shoulders |
+| Animal mode | Yes | No |
+| Custom images | No | Yes |
+
+<Tip>
+The Expression model runs on bitHuman Cloud (default), your own NVIDIA GPU ([Self-Hosted GPU](/deployment/self-hosted-gpu)), or natively on Apple Silicon M3+ ([Expression on macOS](/examples/apple-expression)).
+</Tip>
+
+---
+
+## Adding Gestures (Dynamics)
+
+Make the avatar wave, nod, or laugh in response to conversation keywords. Gestures are supported for **Essence avatars only**.
+
+<Card title="Dynamics API Reference" icon="person-running" href="/api-reference/dynamics">
+  Complete guide to generating, listing, and triggering gesture animations
+</Card>
+
+---
+
+## Configuration
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `avatar_id` | string | Yes* | Agent ID from your [Library](https://www.bithuman.ai/#library) |
+| `avatar_image` | PIL.Image | Yes* | Face image for on-the-fly avatar (Expression only) |
+| `api_secret` | string | Yes | Your API secret |
+| `model` | string | No | `"essence"` (default) or `"expression"` |
+
+*Either `avatar_id` or `avatar_image` is required.
+
+---
+
+## Cloud Advantages
+
+- **No Local Storage** — No large model files to download or manage
+- **Auto-Updates** — Always uses the latest model versions
+- **Scalability** — Handles multiple concurrent sessions automatically
+- **Cross-Platform** — Works on any device with internet
+
+---
+
+## Pricing
+
+Visit [Billing](https://www.bithuman.ai/#library) or click the credit balance in the top navigation for current pricing.
+
+| Plan | Price | Concurrent Sessions | Generations/Day |
+|------|-------|---------------------|-----------------|
+| **Free** | Free | 2 | 5 |
+| **Creator** | $20/mo | 5 | 20 |
+| **Pro** | $99/mo | 10 | 50 |
+| **Enterprise** | Custom | Custom | Custom |
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Authentication errors | Verify API secret at [Developer → API Keys](https://www.bithuman.ai/#developer) |
+| Avatar doesn't appear | Check agent_id exists in your [Library](https://www.bithuman.ai/#library) |
+| Network timeouts | Ensure stable internet; the plugin retries automatically |
+| Plugin installation fails | Run `pip install livekit-plugins-bithuman --upgrade` |
+| No lip movement | Ensure `avatar.start(session, room=ctx.room)` is called before `session.start()` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Avatar Sessions Guide" icon="book-open" href="/deployment/avatar-sessions">
+    All avatar modes explained with complete examples
+  </Card>
+  <Card title="Self-Hosted Plugin" icon="server" href="/examples/self-hosted-plugin">
+    Run on your own infrastructure
+  </Card>
+  <Card title="Dynamics API" icon="person-running" href="/api-reference/dynamics">
+    Configure gestures and animations
+  </Card>
+</CardGroup>

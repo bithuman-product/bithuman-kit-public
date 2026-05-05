@@ -1,0 +1,231 @@
+---
+title: "How bitHuman Works: Audio-to-Avatar Architecture"
+description: "Understand the building blocks of a bitHuman avatar session — the two models (Essence, Expression), three runtime surfaces (Cloud, Self-hosted, On-device), LiveKit rooms, and how to choose."
+icon: "diagram-project"
+---
+
+## The big picture
+
+A bitHuman avatar is a virtual character that moves its lips, face, and body in real time based on audio input. Here's what happens when someone talks to an avatar:
+
+```
+You speak into a microphone
+      ↓
+Audio is sent to an AI agent (e.g. ChatGPT)
+      ↓
+The AI generates a text response
+      ↓
+Text is converted to speech (TTS)
+      ↓
+bitHuman animates the avatar's face to match the speech
+      ↓
+You see a lifelike avatar talking back to you
+```
+
+All of this happens fast enough for a natural conversation.
+
+---
+
+## Key concepts
+
+<AccordionGroup>
+  <Accordion title="Avatar model — Essence (.imx) vs Expression">
+    bitHuman ships **two avatar models**.
+
+    **Essence** uses a pre-built `.imx` model file. Build it once from a photo or video on [bithuman.ai](https://www.bithuman.ai/#explore), then run it anywhere — CPU only, no GPU. Supports gestures, animal mode, and full body. Ideal for kiosks and 24/7 displays.
+
+    **Expression** generates facial animation from any face image at runtime — no `.imx` step. Needs an NVIDIA GPU (server-side) or Apple Silicon M3+ (on-device). Ideal for dynamic faces and consumer apps.
+
+    Side-by-side comparison: **[Essence vs Expression →](/getting-started/models)**.
+  </Accordion>
+
+  <Accordion title="LiveKit room (for real-time conversation)">
+    A **room** is a virtual meeting space where participants communicate in real time using audio and video — similar to a Zoom or Google Meet call.
+
+    In a bitHuman session, the room typically has:
+    - **Your user** — the person talking to the avatar
+    - **An AI agent** — handles conversation logic (speech-to-text, AI response, text-to-speech)
+    - **The avatar** — renders animated video frames based on the agent's speech
+
+    LiveKit is the open-source platform that powers this real-time communication. You don't need to understand LiveKit deeply — bitHuman handles the complex parts.
+
+    Note: real-time rooms are only used for **interactive conversation** flows. Batch video generation and the on-device Swift SDK don't use LiveKit at all.
+  </Accordion>
+
+  <Accordion title="Avatar Session (LiveKit integration)">
+    An **AvatarSession** is the integration point that connects your AI agent to a bitHuman avatar inside a LiveKit room.
+
+    When you create an `AvatarSession`, bitHuman:
+    1. Loads the avatar model (cloud or local)
+    2. Joins the LiveKit room as a participant
+    3. Listens for audio from your AI agent
+    4. Generates animated video frames in real time
+    5. Publishes the video back to the room
+
+    A few lines of code — the session handles everything else. See **[deployment/avatar-sessions](/deployment/avatar-sessions)**.
+  </Accordion>
+
+  <Accordion title="API secret">
+    Your **API secret** authenticates your application with bitHuman services. Create one at [Developer → API Keys](https://www.bithuman.ai/#developer).
+
+    It's used for:
+    - Verifying your identity
+    - Tracking usage and billing (2 credits/min for Expression, 1–2 cr/min for Essence; see [pricing](/deployment/avatar-sessions#billing--credits))
+    - Downloading cloud avatar models
+
+    The Swift SDK reads it from `VoiceChatConfig.apiKey` or the `BITHUMAN_API_KEY` env var; the Python SDK and REST API use the `api-secret` header or `BITHUMAN_API_SECRET` env var.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## The full matrix
+
+bitHuman's two models map onto three runtime surfaces. Find your row, then follow the links.
+
+| | **bitHuman Cloud** | **Self-hosted server** | **On-device (Apple Silicon)** |
+|---|---|---|---|
+| **Essence** (CPU, `.imx`) | [Cloud Plugin](/deployment/livekit-cloud-plugin) — `avatar_id` + API secret | [Python SDK](/getting-started/quickstart) — `pip install bithuman`, run `.imx` locally | — |
+| **Expression** (GPU / M3+) | [Cloud Plugin](/deployment/livekit-cloud-plugin) — `avatar_id` or any face image, `model="expression"` | [Docker container](/deployment/self-hosted-gpu) — Linux + NVIDIA, dynamic face from any image | [Swift SDK](/swift-sdk/overview) + [bithuman-cli](/swift-sdk/cli) — Mac/iPad/iPhone, all inference on-device |
+| **Direct REST control** (any model) | [REST API](/api-reference/overview) — `api.bithuman.ai/v1/...` for agent generation, speak, dynamics, embed tokens | Same REST API works against your hosted agents | n/a |
+
+### Which approach should I use?
+
+Start here:
+
+- **Building a Mac/iPad/iPhone app?** → [Apple Silicon Swift SDK](/swift-sdk/overview) — runs on the user's device, no infra.
+- **Building a website or web app?** → [Cloud Plugin](/deployment/livekit-cloud-plugin) — fastest, scales for you.
+- **Need a 24/7 kiosk on a tiny CPU box?** → [Self-Hosted CPU (Essence)](/deployment/avatar-sessions#self-hosted-cpu) — no GPU, no idle timeout.
+- **Need dynamic faces + on-prem privacy?** → [Self-Hosted GPU (Expression)](/deployment/self-hosted-gpu) — Docker on your NVIDIA box.
+- **Just calling endpoints from a backend?** → [REST API](/api-reference/overview) — `curl` against `api.bithuman.ai`, any language.
+
+### Side-by-side
+
+| | Cloud Plugin | Self-Hosted CPU | Self-Hosted GPU | Apple Silicon Swift SDK |
+|---|---|---|---|---|
+| **Setup time** | ~2 min | ~5 min | ~10 min | ~10 min |
+| **Compute** | bitHuman cloud | Your CPU | Your GPU (8 GB+ VRAM) | User's Apple Silicon GPU + Neural Engine |
+| **Network** | Cloud round-trip per turn | None after auth | None after auth | Heartbeat only (avatar mode); none in audio-only mode |
+| **Avatar source** | Pre-built agent ID, or face image (Expression) | `.imx` model file | Any face image | `.bhx` weights bundle + bundled / drag-dropped portraits |
+| **Where it runs** | Server | Server | Server | End-user's Mac / iPad / iPhone |
+| **Models supported** | Essence, Expression | Essence | Expression | Expression |
+| **Best for** | Web apps, quick demos, scaling | Edge, offline, privacy | Dynamic faces, high volume | Native consumer apps, privacy-strict verticals |
+
+## Four ways to use bitHuman
+
+<CardGroup cols={2}>
+  <Card title="Cloud Plugin" icon="cloud" href="/deployment/livekit-cloud-plugin">
+    **Easiest.** Avatar runs on bitHuman's servers.
+
+    No model files to manage. Provide an Agent ID and API secret. Works with both Essence and Expression.
+
+    Best for: getting started quickly, web apps, and production deployments.
+  </Card>
+  <Card title="Self-Hosted CPU (Essence)" icon="server" href="/examples/self-hosted-plugin">
+    **Most private (server-side).** Avatar runs on your machine.
+
+    Download an `.imx` model and run locally. Works offline after auth. Python SDK (`pip install bithuman`).
+
+    Best for: privacy-sensitive backends, edge servers, kiosks.
+  </Card>
+  <Card title="Self-Hosted GPU (Expression)" icon="gpu-card" href="/deployment/self-hosted-gpu">
+    **Most flexible (server-side).** GPU container on your infrastructure.
+
+    Linux + NVIDIA Docker image. Use any face image to create avatars on-the-fly. No pre-built models needed.
+
+    Best for: dynamic avatars, high volume, full infrastructure control.
+  </Card>
+  <Card title="Apple Silicon Swift SDK" icon="apple" href="/swift-sdk/overview">
+    **Most user-private.** Avatar runs on the end-user's device.
+
+    `bitHumanKit` Swift Package for Mac/iPad/iPhone. Drop in voice + lip-synced avatar; everything inferences locally. Ships with `bithuman-cli` (Homebrew) and three reference apps.
+
+    Best for: native consumer / pro-sumer apps, offline-first products, privacy-strict verticals.
+  </Card>
+</CardGroup>
+
+---
+
+## How the avatar joins a room
+
+This describes the three server-side surfaces (Cloud, Self-hosted CPU, Self-hosted GPU). The Apple Silicon Swift SDK doesn't use LiveKit — see [Swift SDK quickstart](/swift-sdk/quickstart) for that flow instead.
+
+<Steps>
+  <Step title="Your agent connects to a LiveKit room">
+    Your AI agent (the code you write) connects to a LiveKit room and waits for a user to join. This is where the conversation will happen.
+  </Step>
+  <Step title="You create an AvatarSession">
+    In your agent code, you create a `bithuman.AvatarSession` with either a cloud `avatar_id` or a local `model_path`. This tells bitHuman which avatar to use.
+  </Step>
+  <Step title="The avatar session starts">
+    When you call `avatar.start(session, room=ctx.room)`, bitHuman:
+    - **Cloud mode:** Sends a request to bitHuman's servers, which launch an avatar worker that joins your room
+    - **Self-hosted mode:** Loads the `.imx` model (Essence) or hits your GPU container (Expression) and starts generating frames
+  </Step>
+  <Step title="The avatar appears in the room">
+    The avatar joins the LiveKit room as a video participant. Users in the room see the avatar's video feed — a lifelike face that moves and speaks.
+  </Step>
+  <Step title="Real-time conversation begins">
+    As your AI agent produces speech audio, the avatar animates in real time:
+    - Audio from TTS flows to the avatar
+    - The avatar lip-syncs and generates video frames at 25 FPS
+    - Video is published to the room for all participants to see
+  </Step>
+</Steps>
+
+### Visual flow
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Your User  │     │  AI Agent    │     │   Avatar     │
+│  (browser)   │     │  (your code) │     │  (bitHuman)  │
+└──────┬───────┘     └──────┬───────┘     └──────┬───────┘
+       │                    │                    │
+       │   User speaks      │                    │
+       │ ──────────────────>│                    │
+       │                    │                    │
+       │    AI processes    │                    │
+       │    & responds      │                    │
+       │                    │  TTS audio         │
+       │                    │ ──────────────────>│
+       │                    │                    │
+       │                    │  Animated video    │
+       │<───────────────────│<───────────────────│
+       │                    │                    │
+       │  User sees avatar  │                    │
+       │  speaking          │                    │
+       └────────────────────┴────────────────────┘
+                    LiveKit Room
+```
+
+For the on-device Swift flow, every box above lives inside the user's app — speech recognition, LLM, TTS, and lip-sync all run on Apple Silicon.
+
+---
+
+## What you need
+
+| Component | What it is | Where to get it |
+|-----------|-----------|-----------------|
+| **API secret / API key** | Authenticates your app | [Developer → API Keys](https://www.bithuman.ai/#developer) |
+| **Avatar source** | Essence: `.imx` model. Expression: any face image (server) or bundled portrait (Swift) | [Explore](https://www.bithuman.ai/#explore) page or your own photo/video |
+| **LiveKit server** *(server-side flows only)* | Real-time communication | [LiveKit Cloud](https://cloud.livekit.io) (free tier) or self-hosted |
+| **AI agent** *(server-side flows)* | Conversation logic | Your code + an LLM (OpenAI, Anthropic, etc.) — the Swift SDK includes an on-device LLM |
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart (Python)" icon="rocket" href="/getting-started/quickstart">
+    Get an avatar running in 5 minutes
+  </Card>
+  <Card title="Quickstart (Swift)" icon="apple" href="/swift-sdk/quickstart">
+    On-device voice + avatar in 10 minutes
+  </Card>
+  <Card title="Avatar Sessions" icon="book-open" href="/deployment/avatar-sessions">
+    Cloud, CPU, GPU — every mode with code
+  </Card>
+  <Card title="Examples" icon="rectangle-code" href="/examples/overview">
+    Working examples for every surface
+  </Card>
+</CardGroup>
