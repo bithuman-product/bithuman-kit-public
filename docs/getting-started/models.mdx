@@ -1,0 +1,79 @@
+---
+title: "Essence vs Expression"
+description: "Understand the two avatar models and choose the right one for your use case."
+icon: "code-compare"
+---
+
+bitHuman ships two avatar models. Pick the one that fits your use case.
+
+## At a glance
+
+| | Essence | Expression |
+|---|---|---|
+| **What it does** | Pre-rendered animations with real-time lip-sync | AI-generated facial animation from any photo |
+| **Avatar source** | `.imx` model file (built once from your photo/video) | Any face image — no build step |
+| **Runs on** | CPU (any device) **or** Apple Silicon M3+ Mac / iPad Pro M4+ (on-device via [Swift SDK](/swift-sdk/essence)) | NVIDIA GPU (server) **or** Apple Silicon M3+ (on-device) |
+| **Lip-sync** | Yes | Yes |
+| **Custom gestures** | Yes (wave, nod, laugh, etc.) | No |
+| **Idle animations** | Pre-recorded (natural movement loops) | AI-generated micro-movements |
+| **Session timeout** | None — runs 24/7 | 10 min idle (server-side GPU protection); none on-device |
+| **Best for** | Kiosks, always-on displays, consistent branding | Dynamic conversations, custom faces, native consumer apps |
+| **Pricing** | 1 cr/min (self-hosted) · 2 cr/min (cloud) | 2 cr/min (self-hosted & on-device) · 4 cr/min (cloud) |
+
+## Essence
+
+The **Essence** model uses pre-built avatar animations with real-time lip-sync. You create an agent on [bithuman.ai](https://bithuman.ai) from a photo or video, which generates an `.imx` model file containing idle loops, talking animations, and gesture videos.
+
+**Strengths:**
+- Runs on **CPU only** — no GPU required. Works on Raspberry Pi, laptops, edge devices.
+- Supports **custom gestures** (wave, nod, laugh) triggered by keywords or API.
+- **No idle timeout** — sessions run indefinitely. Ideal for 24/7 museum kiosks and lobby displays.
+- Consistent, predictable avatar behavior with smooth transitions between states.
+
+**Where to deploy:**
+- [bitHuman Cloud (LiveKit Plugin)](/deployment/livekit-cloud-plugin) — zero infrastructure, bitHuman hosts the avatar worker
+- [Self-hosted Python SDK](/getting-started/quickstart) — `pip install bithuman`, run `.imx` on your hardware
+- [On-device Apple Silicon Swift](/swift-sdk/essence) — 720p+ playback on Mac M3+ and iPad Pro M4+ via `bitHumanKit`
+- [REST API](/api-reference/overview) — `curl` against `api.bithuman.ai/v1/agent/{code}/speak`
+- [Website Embed](/integrations/embed) — drop-in iframe or chat widget
+
+## Expression
+
+The **Expression** model generates real-time facial expressions using a diffusion pipeline. It takes any face image and produces dynamic lip-sync, eye movement, and emotional expressions — no pre-built model file needed.
+
+**Strengths:**
+- Works with **any face image** — no avatar generation step required.
+- AI-driven expressions respond to speech content and context.
+- Higher visual fidelity for close-up conversational interactions.
+- Now runs **on-device** on Apple Silicon M3+ — no GPU server, no per-turn network round-trip.
+
+**Deployment options:**
+- [Cloud Plugin](/deployment/livekit-cloud-plugin) — bitHuman hosts the GPU worker (add `model="expression"`)
+- [Self-Hosted GPU](/deployment/self-hosted-gpu) — run the Docker container on your own NVIDIA GPU
+- [On-Device macOS](/examples/apple-expression) — run natively on Apple Silicon M3+ via `pip install bithuman`
+
+## Which should I use?
+
+<AccordionGroup>
+  <Accordion title="I want a 24/7 kiosk or always-on display">
+    Use **Essence**. It has no idle timeout and runs on CPU, making it reliable for unattended deployments.
+  </Accordion>
+  <Accordion title="I want the quickest setup with any face photo">
+    Use **Expression** with the Cloud Plugin. Just pass `avatar_image=Image.open("face.jpg")` — no generation step.
+  </Accordion>
+  <Accordion title="I'm building a Mac, iPad, or iPhone app">
+    Use **Expression on-device** via the [Swift SDK](/swift-sdk/overview). Everything runs locally; only a 1-req/min billing heartbeat goes out.
+  </Accordion>
+  <Accordion title="I need custom gestures (wave, nod, laugh)">
+    Use **Essence**. Expression does not support gesture triggers.
+  </Accordion>
+  <Accordion title="I'm building a voice agent with LiveKit">
+    Either model works. Start with Essence (default) for reliability, switch to Expression for dynamic faces.
+  </Accordion>
+  <Accordion title="I'm deploying on edge hardware (Raspberry Pi, laptop)">
+    Use **Essence**. It runs on CPU with 1–2 cores at 25 FPS.
+  </Accordion>
+  <Accordion title="I need the highest visual quality for video generation">
+    Use **Expression** with `quality="high"`. Best for offline video generation, not real-time streaming.
+  </Accordion>
+</AccordionGroup>

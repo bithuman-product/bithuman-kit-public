@@ -1,0 +1,10 @@
+target/
+*.class
+*.jar
+*.pyc
+__pycache__/
+dependency-reduced-pom.xml
+test-frames/
+frames/
+.idea/
+*.iml

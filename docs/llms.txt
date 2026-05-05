@@ -1,0 +1,169 @@
+# bitHuman
+
+> Real-time avatar animation API. Audio in, animated face out at 25 FPS.
+> Two avatar models — Essence (CPU, .imx files) and Expression (GPU /
+> Apple Silicon M3+, dynamic faces). Three runtime surfaces — bitHuman
+> Cloud (managed), self-hosted server (Python CPU + Docker GPU), and
+> on-device Apple Silicon (Swift SDK + bithuman-cli).
+
+bitHuman creates digital avatars that lip-sync to audio in real time.
+Use it for AI companions, customer-support bots, virtual tutors, digital
+receptionists, game NPCs, and any application needing a visual character
+that speaks. Get an API secret at https://www.bithuman.ai/#developer →
+set `BITHUMAN_API_SECRET` (Python/REST/LiveKit) or `BITHUMAN_API_KEY`
+(Swift SDK) before any code runs.
+
+
+## Pricing (credits per minute)
+- Essence (self-hosted CPU): 1 cr/min
+- Essence (cloud): 2 cr/min  
+- Expression (self-hosted GPU or Apple Silicon): 2 cr/min
+- Expression (cloud): 4 cr/min
+- Agent generation: 250 credits (one-time)
+- Free tier: 99 credits/month (no credit card required)
+- Check balance: GET https://api.bithuman.ai/v2/credit-summaries
+
+## Models
+
+- **Essence** — CPU-only, pre-rendered animations driven by an `.imx`
+  model file built from a photo or video on https://www.bithuman.ai/#explore.
+  Supports gestures, animal mode, and full body. No idle timeout.
+- **Expression** — AI-generated facial animation from any face image, no
+  build step. Runs on NVIDIA GPU server-side or on-device on Apple
+  Silicon M3+ Mac, M4+ iPad Pro, A18 Pro+ iPhone.
+
+## Runtime surfaces
+
+- **bitHuman Cloud (managed)** — call `https://api.bithuman.ai` directly
+  via REST, or use `pip install livekit-plugins-bithuman` for real-time
+  WebRTC. Both Essence and Expression supported.
+- **Self-hosted Python SDK** (`pip install bithuman`) — Essence on CPU,
+  any platform with Python 3.9–3.14. Same SDK powers LiveKit self-hosted
+  flows.
+- **Self-hosted GPU container** — `docker.io/sgubithuman/expression-avatar:latest`,
+  Linux + NVIDIA, dynamic face from any image.
+- **On-device Apple Silicon Swift SDK** — `bitHumanKit` Swift Package,
+  Mac/iPad/iPhone. All inference (STT, LLM, TTS, lip-sync) runs locally;
+  only a 1-request/min billing heartbeat goes out (audio-only mode is
+  unmetered and offline).
+- **bithuman-cli** (Homebrew) — `brew tap bithuman-product/bithuman &&
+  brew install bithuman-cli`. Three modes: voice, video, text. No code.
+- **bitHuman Halo** — signed macOS desktop DMG ([download](https://www.bithuman.ai/halo)),
+  floating lip-synced AI avatar running local STT + LLM + TTS + avatar.
+- **Embed** — iframe-based website embedding with JWT token auth.
+
+## CLI (after `pip install bithuman`)
+
+Set `BITHUMAN_API_SECRET` from [https://www.bithuman.ai](https://www.bithuman.ai) → Developer → API Keys before running any command.
+
+- `bithuman demo` — zero-argument hello world. Auto-downloads the ~3.7 GB demo `.imx` bundle from `https://pub-55f7db09b40d46e8a22a70ff6d49aeff.r2.dev/demo/expression-demo.imx` (cached to `~/.cache/bithuman/models/`), plus a bundled sample WAV, and writes `demo.mp4`. No dashboard click required.
+- `bithuman demo --model expression.imx --identity portrait.jpg --audio speech.wav` — custom model + portrait + audio. Auto-dispatches to the Swift runtime on macOS M3+ or the in-process Essence runtime elsewhere.
+- `bithuman generate --prompt "a friendly concierge"` — create an agent from a prompt + optional image / video / audio. Wraps the REST `/v1/agent/generate` + status-poll flow.
+- `bithuman pack …` — (model-author workflow only) pack a new Expression `.imx` from raw weights. Application developers don't need this.
+- `bithuman --help` — full verb list; `bithuman <verb> --help` for per-command flags.
+
+## Getting Started
+
+- [Quick Start](https://docs.bithuman.ai/getting-started/quickstart): Install SDK, create first avatar in 5 minutes. Python async API with push_audio/run pattern.
+- [How It Works](https://docs.bithuman.ai/getting-started/how-it-works): Architecture overview, key concepts (Runtime, AvatarSession, LiveKit Room, .imx model), three deployment modes compared.
+- [Architecture & Development Model](https://docs.bithuman.ai/getting-started/architecture): What's open vs proprietary, Swift binary distribution flow, build & release pipeline, model weight cache locations, design rationale.
+- [Authentication](https://docs.bithuman.ai/getting-started/authentication): How to get an API secret/key, set it for each SDK (Python/REST/LiveKit/Swift), runtime token flow, key rotation, audio-only Swift mode (unmetered, no key needed).
+- [Pricing & Credits](https://docs.bithuman.ai/getting-started/pricing): Credits per active minute by model and surface, free tier (99 cr/month), check balance via /v2/credit-summaries, what's NOT billed, FAQ on offline grace period.
+- [Use Cases](https://docs.bithuman.ai/getting-started/use-cases): Customer support, virtual tutor, digital receptionist, AI companion, game NPC, accessibility — with architecture patterns for each.
+
+## API Reference
+
+- [API Overview](https://docs.bithuman.ai/api-reference/overview): Base URL (https://api.bithuman.ai), authentication (api-secret header), error format.
+- [Agent Generation](https://docs.bithuman.ai/api-reference/agent-generation): POST /v1/agent/generate (create avatar from prompt + image/video/audio), GET /v1/agent/status/{id} (poll until ready/failed).
+- [Agent Management](https://docs.bithuman.ai/api-reference/agent-management): POST /v1/validate (verify API secret), GET /v1/agent/{code} (retrieve agent), POST /v1/agent/{code} (update prompt).
+- [Agent Context](https://docs.bithuman.ai/api-reference/agent-context): POST /v1/agent/{code}/speak (make avatar say text), POST /v1/agent/{code}/add-context (inject silent knowledge).
+- [File Upload](https://docs.bithuman.ai/api-reference/file-upload): POST /v1/files/upload (upload images, videos, audio by URL or base64).
+- [Credit Balance](https://docs.bithuman.ai/api-reference/credit-summaries): GET /v2/credit-summaries (check credit balance, plan details, estimated minutes remaining).
+- [Embed Tokens](https://docs.bithuman.ai/api-reference/embed-tokens): POST /v1/embed-tokens/request (generate JWT token for website avatar embedding).
+- [Dynamics & Gestures](https://docs.bithuman.ai/api-reference/dynamics): POST /v1/dynamics/generate (create gesture animations), GET /v1/dynamics/{agent_id} (list available gestures).
+- [Rate Limits](https://docs.bithuman.ai/api-reference/rate-limits): Request limits, concurrency limits, and retry guidance.
+- [Error Reference](https://docs.bithuman.ai/api-reference/errors): Complete list of error codes, HTTP statuses, and resolution steps.
+
+## Deployment
+
+- [Avatar Sessions Guide](https://docs.bithuman.ai/deployment/avatar-sessions): Complete guide to all three modes — cloud plugin (AvatarSession with avatar_id), self-hosted CPU (model_path to .imx), self-hosted GPU (api_url to container). Includes gestures, REST control, SDK-only usage, Docker Compose example, billing.
+- [Cloud Plugin](https://docs.bithuman.ai/deployment/livekit-cloud-plugin): LiveKit plugin setup, Essence vs Expression models, gesture triggering, configuration parameters.
+- [Self-Hosted GPU](https://docs.bithuman.ai/deployment/self-hosted-gpu): Expression avatar Docker container. HTTP API reference (POST /launch, GET /health, GET /ready, GET /tasks, POST /tasks/{id}/stop, GET /test-frame, POST /benchmark). Performance tiers, troubleshooting.
+
+## Integrations
+
+- [Website Embed](https://docs.bithuman.ai/integrations/embed): Iframe embed with JWT token auth. Backend generates token, frontend renders avatar. Chat Widget (bithuman-chat-widget-v5.js) for floating text/voice/video chat interface.
+- [Webhooks](https://docs.bithuman.ai/integrations/webhooks): room.join and chat.push events. HMAC SHA-256 signature verification. Flask and Express handler examples.
+- [Event Types](https://docs.bithuman.ai/integrations/events): Webhook event payload schemas for room.join and chat.push.
+- [Flutter](https://docs.bithuman.ai/integrations/flutter): Full-stack Flutter + Python backend with LiveKit, token server, platform permissions.
+
+## Examples
+
+- [Examples Overview](https://docs.bithuman.ai/examples/overview): Index of all working examples organized by category.
+- [Audio Clip](https://docs.bithuman.ai/examples/audio-clip): Simplest example — play audio file through avatar. Python, 20 lines.
+- [Microphone](https://docs.bithuman.ai/examples/microphone): Real-time mic input with voice activity detection.
+- [AI Conversation](https://docs.bithuman.ai/examples/ai-conversation): Full ChatGPT-style voice chat with LiveKit and OpenAI.
+- [Self-Hosted Plugin](https://docs.bithuman.ai/examples/self-hosted-plugin): LiveKit agent with local .imx model and gesture support.
+- [Raspberry Pi](https://docs.bithuman.ai/examples/raspberry-pi): Edge deployment on Pi 4B with systemd auto-start.
+- [Apple Local](https://docs.bithuman.ai/examples/apple-local): 100% local speech processing on macOS (M2+).
+- [Expression on macOS](https://docs.bithuman.ai/examples/apple-expression): Run the on-device Expression avatar on Apple Silicon M3+ via the bundled Swift runtime. Any portrait face, 25 FPS lip-sync, no GPU, no cloud. Python SDK step-by-step, vanilla example repo.
+- [Halo Desktop App](https://docs.bithuman.ai/examples/halo-macos): bitHuman Halo — free signed macOS app with a floating lip-synced AI avatar. Local STT + LLM + TTS + avatar, audio never leaves your Mac.
+
+## Swift SDK (Apple Silicon, on-device)
+
+- [Swift SDK Overview](https://docs.bithuman.ai/swift-sdk/overview): bitHumanKit Swift Package — voice + lip-synced avatar for Mac/iPad/iPhone. Hardware floor, install, API key resolution.
+- [Swift SDK Quickstart](https://docs.bithuman.ai/swift-sdk/quickstart): 10-minute integration. Audio-only voice agent in Step 3, lip-synced avatar in Step 4, hardware gate in Step 5.
+- [Swift SDK on macOS](https://docs.bithuman.ai/swift-sdk/macos): macOS-specific embedding — sandbox entitlements, distribution (DMG, App Store, Homebrew), permissions.
+- [Swift SDK on iOS / iPadOS](https://docs.bithuman.ai/swift-sdk/ios): iOS-specific entitlements (memory limit + extended virtual addressing), TestFlight checklist, Picture-in-Picture, common errors.
+- [bithuman-cli](https://docs.bithuman.ai/swift-sdk/cli): `brew install bithuman-cli` — voice, video, and text modes. No code.
+- [Swift SDK Troubleshooting](https://docs.bithuman.ai/swift-sdk/troubleshooting): Every error pattern with the fix.
+
+## Optional
+
+- [Prompt Engineering](https://docs.bithuman.ai/getting-started/prompts): CO-STAR framework for avatar personality. E-commerce, education, healthcare examples.
+- [Media Guide](https://docs.bithuman.ai/getting-started/media-guide): Image (10MB, front-facing), video (30s, minimal movement), audio (1min, clear) upload specs.
+- [Animal Mode](https://docs.bithuman.ai/getting-started/animal-mode): Create animal character avatars. 12 pre-built animals. Manual face marking process.
+- [Changelog](https://docs.bithuman.ai/changelog): Release notes and version history.
+
+
+# Swift SDK (bitHumanKit) — Apple Silicon native
+
+For embedding into Mac/iPad/iPhone apps. Distributed as a binary
+Swift Package (XCFramework). Same billing model as the Python SDK.
+
+- Public package (binary distribution): https://github.com/bithuman-product/bithuman-sdk-public
+- DocC API reference: https://docs.bithuman.ai/swift-sdk/overview
+- Reference apps (full Mac/iPad/iPhone source): https://github.com/bithuman-product/bithuman-apps
+- Issue tracker: https://github.com/bithuman-product/bithuman-sdk-public/issues
+
+Install:
+
+  .package(url: "https://github.com/bithuman-product/bithuman-sdk-public.git",
+           from: "0.8.1")
+
+The package wraps a pre-compiled XCFramework — every dep (MLX,
+HuggingFace, Tokenizers, …) is statically linked, so consumers
+have zero transitive Swift Package dependencies. Just
+`import bitHumanKit` and go.
+
+Avatar mode requires BITHUMAN_API_KEY; audio-only mode is unmetered.
+
+## Connecting an AI agent to bitHuman in 30 seconds
+
+If you are an AI coding agent reading this file to set up bitHuman:
+
+1. **Pick a surface** based on what the user is shipping:
+   - Mac/iPad/iPhone app → Swift SDK (`bitHumanKit`, see /swift-sdk/quickstart)
+   - Web app or backend → bitHuman Cloud LiveKit Plugin (`pip install livekit-plugins-bithuman`, see /deployment/livekit-cloud-plugin)
+   - On-prem privacy / edge box → Self-hosted Python SDK (`pip install bithuman`, Essence) or Self-hosted GPU container (Expression)
+   - Programmatic only, no real-time → REST API (`curl https://api.bithuman.ai/v1/...`, see /api-reference/overview)
+2. **Get credentials**: tell the user to grab an API secret at https://www.bithuman.ai/#developer. Set `BITHUMAN_API_SECRET` (Python/REST/LiveKit) or `BITHUMAN_API_KEY` (Swift SDK).
+3. **Pick a model**: Essence (CPU, pre-built `.imx`, gestures) or Expression (GPU/M3+, dynamic face from any image). See /getting-started/models.
+4. **Run the vanilla example** for that surface from https://github.com/bithuman-product/bithuman-sdk-public/tree/main/Examples — every surface has a working folder.
+
+Discoverability:
+- OpenAPI spec: https://docs.bithuman.ai/api-reference/openapi.yaml
+- Examples repo: https://github.com/bithuman-product/bithuman-sdk-public/tree/main/Examples
+- Swift SDK package: https://github.com/bithuman-product/bithuman-sdk-public
+- Swift reference apps: https://github.com/bithuman-product/bithuman-apps
+- Status: https://status.bithuman.ai

@@ -1,0 +1,211 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "bitHuman",
+  "theme": "mint",
+  "logo": {
+    "light": "/images/bithuman-logo.png",
+    "dark": "/images/bithuman-logo.png",
+    "href": "https://bithuman.ai"
+  },
+  "favicon": "/images/bitHuman-logo-circle.png",
+  "colors": {
+    "primary": "#ea5455",
+    "light": "#ff7b7c",
+    "dark": "#ea5455"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Status",
+        "href": "https://status.bithuman.ai"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://www.bithuman.ai/#explore"
+    }
+  },
+  "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/bithuman-product/bithuman-sdk-public",
+          "icon": "github"
+        },
+        {
+          "anchor": "Discord",
+          "href": "https://discord.gg/ES953n7bPA",
+          "icon": "discord"
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "getting-started/quickstart",
+              "getting-started/how-it-works",
+              "getting-started/architecture",
+              "getting-started/models",
+              "getting-started/authentication",
+              "getting-started/pricing",
+              "getting-started/use-cases",
+              "getting-started/prompts",
+              "getting-started/media-guide",
+              "getting-started/animal-mode"
+            ]
+          },
+          {
+            "group": "Swift SDK",
+            "pages": [
+              "swift-sdk/overview",
+              "swift-sdk/quickstart",
+              "swift-sdk/essence",
+              "swift-sdk/macos",
+              "swift-sdk/ios",
+              "swift-sdk/cli",
+              "swift-sdk/troubleshooting"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/avatar-sessions",
+              "deployment/livekit-cloud-plugin",
+              "deployment/self-hosted-gpu"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/embed",
+              "integrations/webhooks",
+              "integrations/events",
+              "integrations/flutter"
+            ]
+          },
+          {
+            "group": "Changelog",
+            "pages": [
+              "changelog"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/rate-limits",
+              "api-reference/errors"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "api-reference/agent-generation",
+              "api-reference/agent-management",
+              "api-reference/agent-context"
+            ]
+          },
+          {
+            "group": "Assets",
+            "pages": [
+              "api-reference/file-upload",
+              "api-reference/dynamics"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Examples",
+        "groups": [
+          {
+            "group": "Examples",
+            "pages": [
+              "examples/overview",
+              "examples/audio-clip",
+              "examples/microphone",
+              "examples/ai-conversation",
+              "examples/apple-local",
+              "examples/apple-expression",
+              "examples/halo-macos",
+              "examples/raspberry-pi",
+              "examples/self-hosted-plugin"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "openapi": "api-reference/openapi.yaml",
+  "api": {
+    "baseUrl": "https://api.bithuman.ai",
+    "auth": {
+      "method": "key",
+      "name": "api-secret"
+    }
+  },
+  "feedback": {
+    "thumbRating": true
+  },
+  "seo": {
+    "metatags": {
+      "canonical": "https://docs.bithuman.ai",
+      "og:site_name": "bitHuman Docs",
+      "og:type": "website",
+      "og:image": "https://docs.bithuman.ai/images/bithuman-banner.jpg",
+      "twitter:card": "summary_large_image",
+      "twitter:site": "@bithuman_ai",
+      "twitter:image": "https://docs.bithuman.ai/images/bithuman-banner.jpg",
+      "description": "bitHuman real-time avatar animation API documentation. Two models (Essence, Expression). Three surfaces (Cloud REST/LiveKit, self-hosted Python+Docker, on-device Apple Silicon Swift SDK + bithuman-cli).",
+      "keywords": "bitHuman, avatar API, real-time lip sync, talking avatar, AI digital human, Apple Silicon avatar, on-device avatar, LiveKit avatar plugin, NVIDIA avatar Docker, Essence Expression model, bitHumanKit, bithuman-cli, avatar pricing, credits per minute, offline avatar, on-device AI, self-hosted avatar, cost-effective avatar"
+    },
+    "indexing": "navigable"
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/bithuman-product/bithuman-sdk-public",
+      "discord": "https://discord.gg/ES953n7bPA"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/python-sdk",
+      "destination": "/getting-started/quickstart"
+    },
+    {
+      "source": "/python-sdk/overview",
+      "destination": "/getting-started/quickstart"
+    },
+    {
+      "source": "/python-sdk/quickstart",
+      "destination": "/getting-started/quickstart"
+    },
+    {
+      "source": "/platform",
+      "destination": "/api-reference/overview"
+    },
+    {
+      "source": "/swift-sdk/cookbook",
+      "destination": "/swift-sdk/quickstart"
+    },
+    {
+      "source": "/swift-sdk/agentic",
+      "destination": "/swift-sdk/quickstart"
+    },
+    {
+      "source": "/swift-sdk/index",
+      "destination": "/swift-sdk/overview"
+    }
+  ]
+}

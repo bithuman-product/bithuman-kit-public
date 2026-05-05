@@ -1,0 +1,3 @@
+python-dotenv~=1.1
+bithuman>=1.7.0
+livekit-agents[openai,bithuman,silero]~=1.4
