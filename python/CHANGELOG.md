@@ -2,6 +2,24 @@
 
 All notable changes to the `bithuman` package are documented here.
 
+## [1.18.5] - 2026-05-18
+
+### Added
+- **Unified package.** One `pip install bithuman` now ships the complete prior `1.11.3` Python API *and* the native libessence engine. The full legacy surface (`Bithuman`, `AsyncBithuman`, `bithuman.engine.*`, `bithuman.runtime`, `bithuman.api`, `bithuman.audio`, …) is present and 100% backward-compatible — code pinned to `bithuman==1.11.3` runs unchanged on `1.18.5`.
+- **Native TAR→IMXv2 auto-conversion.** Fresh console `.imx` TAR exports load directly (previously failed with `imx: bad magic`).
+- **Python 3.9–3.14** wheels: Linux x86_64/ARM64 (manylinux_2_28) and macOS Apple Silicon.
+
+### Changed
+- The native libessence engine is the default execution path. Versus the pure-Python `1.11.3` runtime: dramatically faster cold model load and lower resident memory, with exact frame-for-frame output parity (verified). C ABI version unchanged.
+- `Avatar` / `AsyncAvatar` are deprecated aliases of the canonical `Bithuman` / `AsyncBithuman`.
+
+### Fixed
+- **Legacy / encoder-less `.imx` load.** Models without an embedded `audio_encoder.onnx` (every legacy v2 export) now load via a process-default bundled encoder instead of failing.
+
+### Notes
+- Pin `bithuman>=1.18.5`. Versions `1.18.0`–`1.18.4` predate the unification and should not be used.
+- Windows and macOS Intel: no native wheel yet — stay on `bithuman==1.11.3` for those platforms.
+
 ## [1.11.3] - 2026-05-12
 
 ### Fixed

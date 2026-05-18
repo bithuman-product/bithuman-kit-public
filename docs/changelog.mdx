@@ -10,6 +10,12 @@ Product-level changes only. Per-version notes: [Python SDK CHANGELOG](https://gi
 
 ## May 2026
 
+**v1.18.5** (2026-05-18)
+- Unified `bithuman`: one `pip install bithuman` = full prior `1.11.3` API + native engine, 100% backward-compatible (`==1.11.3` code runs unchanged).
+- Native engine: far faster cold load + lower memory than pure-Python, exact output parity. Loads fresh console `.imx` TAR exports natively.
+- Python 3.9–3.14 (Linux x86_64/ARM64, macOS Apple Silicon). Pin `>=1.18.5` (1.18.0–1.18.4 predate the unification; Windows/macOS-Intel stay on `==1.11.3`).
+
+
 **v1.17.x** (2026-05-14)
 - `bithuman avatar --openai` — workstation Realtime, browser-rendered avatar.
 - `voice` / `text` auto-pick cloud vs `--local`; explicit flags override.
